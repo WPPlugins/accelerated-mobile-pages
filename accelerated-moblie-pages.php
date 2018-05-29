@@ -3,7 +3,7 @@
 Plugin Name: Accelerated Mobile Pages
 Plugin URI: https://wordpress.org/plugins/accelerated-mobile-pages/
 Description: AMP for WP - Accelerated Mobile Pages for WordPress
-Version: 0.9.93
+Version: 0.9.94
 Author: Ahmed Kaludi, Mohammed Kaludi
 Author URI: https://ampforwp.com/
 Donate link: https://www.paypal.me/Kaludi/25
@@ -19,7 +19,7 @@ define('AMPFORWP_PLUGIN_DIR_URI', plugin_dir_url(__FILE__));
 define('AMPFORWP_DISQUS_URL',plugin_dir_url(__FILE__).'includes/disqus.html');
 define('AMPFORWP_IMAGE_DIR',plugin_dir_url(__FILE__).'images');
 define('AMPFORWP_MAIN_PLUGIN_DIR', plugin_dir_path( __DIR__ ) );
-define('AMPFORWP_VERSION','0.9.93');
+define('AMPFORWP_VERSION','0.9.94');
 
 // any changes to AMP_QUERY_VAR should be refelected here
 function ampforwp_generate_endpoint(){
@@ -458,7 +458,7 @@ function ampforwp_load_plugin_last() {
         array_push($active_plugins, $this_plugin);
         update_option('active_plugins', $active_plugins);
 }
-if( file_exists(realpath(plugin_dir_path(FILE).'../amp/amp.php')) ){
+if( file_exists(realpath(plugin_dir_path(__FILE__).'../amp/amp.php')) ){
 	add_action("activated_plugin", "ampforwp_load_plugin_last");
 }
 
@@ -467,7 +467,7 @@ if( file_exists(realpath(plugin_dir_path(FILE).'../amp/amp.php')) ){
 */
 function ampforwp_bundle_core_amp_files(){
 	// Bundling Default plugin
-	if($GLOBALS['pagenow'] === 'plugins.php' && file_exists( realpath(plugin_dir_path(FILE).'../amp/amp.php') ) ){
+	if($GLOBALS['pagenow'] === 'plugins.php' && file_exists( realpath(plugin_dir_path(__FILE__).'../amp/amp.php') ) ){
 		return false;
 	}
 	require_once AMPFORWP_PLUGIN_DIR .'/includes/vendor/vendor-compatibility.php';
