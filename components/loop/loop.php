@@ -7,7 +7,7 @@ function amp_archive_title(){
 			$curauth_url = get_avatar_url( $curauth->user_email, array('size'=>180) );
 			if($curauth_url){ ?>
 				<div class="amp-wp-content author-img">
-					<amp-img data-block-on-consent src="<?php echo esc_url($curauth_url); ?>" width="90" height="90" layout="responsive"></amp-img>
+					<amp-img src="<?php echo esc_url($curauth_url); ?>" width="90" height="90" layout="responsive"></amp-img>
 				</div>
 			<?php }
 	}
@@ -369,17 +369,10 @@ function amp_loop_image( $data=array() ) {
 
 // Category
 function amp_loop_category(){
-	global $redux_builder_amp;
 	if(count(get_the_category()) > 0){
 		echo ' <ul class="loop-category">';
 		foreach((get_the_category()) as $category) {
-			echo '<li class="amp-cat-'. $category->term_id.'">';
-			if ( true == $redux_builder_amp['ampforwp-archive-support'] && true == $redux_builder_amp['ampforwp-cats-tags-links-single'] ){
-				echo '<a href="'.ampforwp_url_controller( get_category_link( $category->term_id ) ).'">'. $category->cat_name.'</a>';
-			}
-			else
-				echo '<span>'. $category->cat_name.'</span>';
-			echo '</li>';
+			echo '<li class="amp-cat-'. $category->term_id.'"><a href="'.ampforwp_url_controller( get_category_link( $category->term_id ) ).'">'. $category->cat_name.'</a></li>';
 		}
 		echo '</ul>';
 	}

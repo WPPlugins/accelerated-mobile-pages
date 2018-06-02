@@ -1,14 +1,14 @@
 /*Bolt Icon*/  
 .ampforwp-blurb-add:hover{
-	cursor: pointer;
+    cursor: pointer;
 }
 .ampforwp-blurb-add.button {
-	margin-bottom: 10px;
+    margin-bottom: 10px;
 }
 .ampforwp-blurb-additional .preview-image {
-	max-width:100%;
-	width : 70px;
-	height : 70px;
+    max-width:100%;
+    width : 70px;
+    height : 70px;
 }
 #toplevel_page_amp_options a .wp-menu-image:before{display: none}
 
@@ -20,8 +20,8 @@ body #toplevel_page_amp_options .wp-menu-image{
     -webkit-background-size: 20px auto;
     background-size: 20px auto;
 }
-.amp_content_builder .redux-group-tab-link-a span:after {
-/*    content: "NEW";*/
+.ampforwp_new_features .redux-group-tab-link-a span:after {
+    content: "NEW";
     color: #fff;
     font-size: 10px;
     background: #4452a7;

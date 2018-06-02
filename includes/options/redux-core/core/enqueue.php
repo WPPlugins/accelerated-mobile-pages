@@ -27,6 +27,7 @@
                 if ( defined('AMPFORWP_VERSION') ) {
                     $this->timestamp = AMPFORWP_VERSION;
                 }
+
                 $this->register_styles();
                 $this->register_scripts();
 
