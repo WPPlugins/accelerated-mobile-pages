@@ -3,7 +3,7 @@
 Plugin Name: Accelerated Mobile Pages
 Plugin URI: https://wordpress.org/plugins/accelerated-mobile-pages/
 Description: AMP for WP - Accelerated Mobile Pages for WordPress
-Version: 0.9.96.1
+Version: 0.9.97
 Author: Ahmed Kaludi, Mohammed Kaludi
 Author URI: https://ampforwp.com/
 Donate link: https://www.paypal.me/Kaludi/25
@@ -19,7 +19,7 @@ define('AMPFORWP_PLUGIN_DIR_URI', plugin_dir_url(__FILE__));
 define('AMPFORWP_DISQUS_URL',plugin_dir_url(__FILE__).'includes/disqus.html');
 define('AMPFORWP_IMAGE_DIR',plugin_dir_url(__FILE__).'images');
 define('AMPFORWP_MAIN_PLUGIN_DIR', plugin_dir_path( __DIR__ ) );
-define('AMPFORWP_VERSION','0.9.96.1');
+define('AMPFORWP_VERSION','0.9.97');
 
 // any changes to AMP_QUERY_VAR should be refelected here
 function ampforwp_generate_endpoint(){
@@ -92,7 +92,7 @@ function ampforwp_add_custom_rewrite_rules() {
 	// For Homepage with Pagination
     add_rewrite_rule(
         'amp/page/([0-9]{1,})/?$',
-        'index.php?amp&paged=$matches[1]',
+        'index.php?amp=1&paged=$matches[1]',
         'top'
     );
 
@@ -100,13 +100,13 @@ function ampforwp_add_custom_rewrite_rules() {
 	if( ampforwp_name_blog_page() ) {
 	    add_rewrite_rule(
 	        ampforwp_name_blog_page(). '/amp/page/([0-9]{1,})/?$',
-	        'index.php?amp&paged=$matches[1]&page_id=' .ampforwp_get_the_page_id_blog_page(),
+	        'index.php?amp=1&paged=$matches[1]&page_id=' .ampforwp_get_the_page_id_blog_page(),
 	        'top'
 	    );
 	    // Pagination to work with Extensions like.hml
 	    add_rewrite_rule(
 	        ampforwp_name_blog_page(). '(.+?)/amp/page/([0-9]{1,})/?$',
-	        'index.php?amp&paged=$matches[2]&page_id=' .ampforwp_get_the_page_id_blog_page(),
+	        'index.php?amp=1&paged=$matches[2]&page_id=' .ampforwp_get_the_page_id_blog_page(),
 	        'top'
 	    );
 	}
@@ -114,7 +114,7 @@ function ampforwp_add_custom_rewrite_rules() {
     // For Author pages
     add_rewrite_rule(
         'author\/([^/]+)\/amp\/?$',
-        'index.php?amp&author_name=$matches[1]',
+        'index.php?amp=1&author_name=$matches[1]',
         'top'
     );
     add_rewrite_rule(
@@ -133,13 +133,13 @@ function ampforwp_add_custom_rewrite_rules() {
 
     add_rewrite_rule(
       $rewrite_category.'\/(.+?)\/amp/?$',
-      'index.php?amp&category_name=$matches[1]',
+      'index.php?amp=1&category_name=$matches[1]',
       'top'
     );
     // For category pages with Pagination
     add_rewrite_rule(
-      $rewrite_category.'\/(.+?)\/amp\/page\/?([0-9]{1,})\/?$',
-      'index.php?amp&category_name=$matches[1]&paged=$matches[2]',
+      $rewrite_category.'/(.+?)\/amp\/page\/?([0-9]{1,})\/?$',
+      'index.php?amp=1&category_name=$matches[1]&paged=$matches[2]',
       'top'
     );
 
@@ -150,7 +150,7 @@ function ampforwp_add_custom_rewrite_rules() {
 	if ( $permalink_structure ) {
 	  	add_rewrite_rule(
 	      $permalink_structure.'\/'.$rewrite_category.'\/(.+?)\/amp\/page\/?([0-9]{1,})\/?$',
-	      'index.php?amp&category_name=$matches[1]&paged=$matches[2]',
+	      'index.php?amp=1&category_name=$matches[1]&paged=$matches[2]',
 	      'top'
 	    );
   	}
@@ -164,20 +164,20 @@ function ampforwp_add_custom_rewrite_rules() {
     }
     add_rewrite_rule(
       $rewrite_tag.'\/(.+?)\/amp/?$',
-      'index.php?amp&tag=$matches[1]',
+      'index.php?amp=1&tag=$matches[1]',
       'top'
     );
     // For tag pages with Pagination
     add_rewrite_rule(
       $rewrite_tag.'\/(.+?)\/amp\/page\/?([0-9]{1,})\/?$',
-      'index.php?amp&tag=$matches[1]&paged=$matches[2]',
+      'index.php?amp=1&tag=$matches[1]&paged=$matches[2]',
       'top'
     );
     // For tag pages with Pagination (Custom Permalink Structure)
     if ( $permalink_structure ) {
 	  	add_rewrite_rule(
 	      $permalink_structure.'\/'.$rewrite_tag.'\/(.+?)\/amp\/page\/?([0-9]{1,})\/?$',
-	      'index.php?amp&tag=$matches[1]&paged=$matches[2]',
+	      'index.php?amp=1&tag=$matches[1]&paged=$matches[2]',
 	      'top'
 	    );
   	}
@@ -220,6 +220,56 @@ function ampforwp_add_custom_rewrite_rules() {
 	}
 }
 add_action( 'init', 'ampforwp_add_custom_rewrite_rules' );
+// add re-write rule for Products
+add_action( 'init', 'ampforwp_custom_rewrite_rules_for_product_category' );
+if ( ! function_exists('ampforwp_custom_rewrite_rules_for_product_category') ) {
+	function ampforwp_custom_rewrite_rules_for_product_category(){
+		if ( class_exists('WooCommerce') ) {
+			$permalinks = wp_parse_args( (array) get_option( 'woocommerce_permalinks', array() ), array(
+				'product_base'           => '',
+				'category_base'          => '',
+				'tag_base'               => '',
+				'attribute_base'         => '',
+				'use_verbose_page_rules' => false,
+			) );
+			// Ensure rewrite slugs are set.
+			$permalinks['product_rewrite_slug']   = untrailingslashit( empty( $permalinks['product_base'] ) ? _x( 'product', 'slug', 'woocommerce' )             : $permalinks['product_base'] );
+			$permalinks['category_rewrite_slug']  = untrailingslashit( empty( $permalinks['category_base'] ) ? _x( 'product-category', 'slug', 'woocommerce' )   : $permalinks['category_base'] );
+			$permalinks['tag_rewrite_slug']       = untrailingslashit( empty( $permalinks['tag_base'] ) ? _x( 'product-tag', 'slug', 'woocommerce' )             : $permalinks['tag_base'] );
+			$permalinks['attribute_rewrite_slug'] = untrailingslashit( empty( $permalinks['attribute_base'] ) ? '' : $permalinks['attribute_base'] );
+
+
+
+			add_rewrite_rule( 
+				 $permalinks['product_rewrite_slug']."\/amp\/page\/([0-9]{1,})/?$",
+				 'index.php?post_type=product&paged=$matches[1]&amp=1',
+				 'top' 
+				);
+			add_rewrite_rule( 
+				 $permalinks['category_rewrite_slug'].'\/(.+?)\/amp\/page\/?([0-9]{1,})/?$',
+				 'index.php?product_cat=$matches[1]&paged=$matches[2]&amp=1',
+				 'top' 
+				);	
+			add_rewrite_rule(
+			      $permalinks['category_rewrite_slug'].'\/(.+?)\/amp\/?$',
+			      'index.php?amp&product_cat=$matches[1]',
+			      'top'
+			    );
+
+
+			add_rewrite_rule( 
+				 $permalinks['tag_rewrite_slug'].'\/(.+?)\/amp\/page\/?([0-9]{1,})/?$',
+				 'index.php?product_tag=$matches[1]&paged=$matches[2]&amp=1',
+				 'top' 
+				);	
+			add_rewrite_rule(
+			      $permalinks['tag_rewrite_slug'].'\/(.+?)\/amp\/?$',
+			      'index.php?amp&product_tag=$matches[1]',
+			      'top'
+			    );
+		 }
+	}
+}
 
 register_activation_hook( __FILE__, 'ampforwp_rewrite_activation', 20 );
 function ampforwp_rewrite_activation() {
@@ -314,49 +364,76 @@ function ampforwp_parent_plugin_check() {
 if(!function_exists('ampforwp_upcomming_layouts_demo') && is_admin()){
 	function ampforwp_upcomming_layouts_demo(){
 		return array(
-            array( 
-			"name"=>'News',
-			"image"=>''.AMPFORWP_IMAGE_DIR . '/layouts-1.png',
-			"link"=>'https://ampforwp.com/layouts-1/',
+			array(	
+			"name"=>'Creative Services',	
+			"image"=>''.AMPFORWP_IMAGE_DIR . '/layouts-9.png',	
+			"link"=>'https://ampforwp.com/layouts-9/',	
 			),
-            array(
-			"name"=>'Weekly Magazine',
-			"image"=>''.AMPFORWP_IMAGE_DIR . '/layouts-2.png',
-			"link"=>'https://ampforwp.com/layouts-2/',
+			array(	
+			"name"=>'App',	
+			"image"=>''.AMPFORWP_IMAGE_DIR . '/layouts-8.png',	
+			"link"=>'https://ampforwp.com/layouts-8/',	
 			),
-            array(	
-			"name"=>'Elegance',	
-			"image"=>''.AMPFORWP_IMAGE_DIR . '/layouts-3.png',	
-			"link"=>'https://ampforwp.com/layouts-3/',	
-			),	
+			array(	
+			"name"=>'Business Blog',	
+			"image"=>''.AMPFORWP_IMAGE_DIR . '/layouts-7.png',	
+			"link"=>'https://ampforwp.com/layouts-7/',	
+			),
+			array(	
+			"name"=>'Journal',	
+			"image"=>''.AMPFORWP_IMAGE_DIR . '/layouts-6.png',	
+			"link"=>'https://ampforwp.com/layouts-6/',	
+			),
+			array(	
+			"name"=>'Studio',	
+			"image"=>''.AMPFORWP_IMAGE_DIR . '/layouts-5.png',	
+			"link"=>'https://ampforwp.com/layouts-5/',	
+			),
 			array(	
 			"name"=>'Agency',	
 			"image"=>''.AMPFORWP_IMAGE_DIR . '/layouts-4.png',	
 			"link"=>'https://ampforwp.com/layouts-4/',	
 			),	
 			array(	
-			"name"=>'Studio',	
-			"image"=>''.AMPFORWP_IMAGE_DIR . '/layouts-5.png',	
-			"link"=>'https://ampforwp.com/layouts-5/',	
-			),	
-			array(	
-			"name"=>'Journal',	
-			"image"=>''.AMPFORWP_IMAGE_DIR . '/layouts-6.png',	
-			"link"=>'https://ampforwp.com/amp-layouts/',	
+			"name"=>'Elegance',	
+			"image"=>''.AMPFORWP_IMAGE_DIR . '/layouts-3.png',	
+			"link"=>'https://ampforwp.com/layouts-3/',	
 			),
+			array(
+			"name"=>'Weekly Magazine',
+			"image"=>''.AMPFORWP_IMAGE_DIR . '/layouts-2.png',
+			"link"=>'https://ampforwp.com/layouts-2/',
+			),
+            array( 
+			"name"=>'News',
+			"image"=>''.AMPFORWP_IMAGE_DIR . '/layouts-1.png',
+			"link"=>'https://ampforwp.com/layouts-1/',
+			),
+			
 			);
 	}
 }
 // Redux panel inclusion code
-if ( ! class_exists( 'ReduxFramework' ) ) {
-    require_once dirname( __FILE__ ).'/includes/options/extensions/loader.php';
+include_once( ABSPATH . 'wp-admin/includes/plugin.php' );
+if ( (! class_exists( 'ReduxFramework' ) && $GLOBALS['pagenow']=='admin.php' && $_GET['page']=='amp_options') || is_plugin_active('redux-framework/redux-framework.php') ) {
+	require_once dirname( __FILE__ ).'/includes/options/extensions/loader.php';
     require_once dirname( __FILE__ ).'/includes/options/redux-core/framework.php';
 }
-if ( is_admin() ) {
-	// Register all the main options	
-	require_once dirname( __FILE__ ).'/includes/options/admin-config.php';
-	require_once dirname( __FILE__ ).'/templates/report-bugs.php';
+
+add_action('after_setup_theme', 'ampforwp_load_amp_options');
+function ampforwp_load_amp_options(){
+	if ( ! class_exists( 'ReduxFramework' ) ) {
+	    require_once dirname( __FILE__ ).'/includes/options/extensions/loader.php';
+	    require_once dirname( __FILE__ ).'/includes/options/redux-core/framework.php';
+	}
+	if ( is_admin() ) {
+		// Register all the main options	
+		require_once dirname( __FILE__ ).'/includes/options/admin-config.php';
+		require_once dirname( __FILE__ ).'/templates/report-bugs.php';
+	}
 }
+
+
 // Modules 
 add_action('after_setup_theme','ampforwp_add_module_files');
 function ampforwp_add_module_files() {
@@ -459,6 +536,9 @@ function ampforwp_bundle_core_amp_files(){
 	if ( ! defined('AMP__DIR__') ) {
 		define( 'AMP__DIR__', plugin_dir_path(__FILE__) . 'includes/vendor/amp/' );
 	}
+	if ( ! defined('AMP_QUERY_VAR') ){
+		define('AMP_QUERY_VAR', 'amp');
+	}
 	define( 'AMP__VERSION', '0.4.2' );
 
 	require_once( AMP__DIR__ . '/back-compat/back-compat.php' );
@@ -492,8 +572,8 @@ function ampforwp_modify_amp_activatation_link( $actions, $plugin_file ) {
 	if ( $plugin == $plugin_file ) {
 		add_thickbox();
 		unset($actions['activate']);
-		$a = '<span style="cursor:pointer;color:#0089c8" class="warning_activate_amp" onclick="alert(\'AMP is already bundled with AMPforWP. Please do not install this plugin with AMPforWP to avoid conflicts. \')">Activate</span>';
-		array_unshift ($actions,$a);
+		$amp_activate = '<span style="cursor:pointer;color:#0089c8" class="warning_activate_amp" onclick="alert(\'AMP is already bundled with AMPforWP. Please do not install this plugin with AMPforWP to avoid conflicts. \')">Activate</span>';
+		array_unshift ($actions,$amp_activate);
 	} 
  	return $actions;
 }
@@ -505,8 +585,9 @@ if ( ! function_exists('ampforwp_init') ) {
 		if ( false === apply_filters( 'amp_is_enabled', true ) ) {
 			return;
 		}
-
-		define( 'AMP_QUERY_VAR', apply_filters( 'amp_query_var', 'amp' ) );
+		if( ! defined('AMP_QUERY_VAR')){
+			define( 'AMP_QUERY_VAR', apply_filters( 'amp_query_var', 'amp' ) );
+		}
 
 		if ( ! defined('AMP__DIR__') ) {
 			define( 'AMP__DIR__', plugin_dir_path(__FILE__) . 'includes/vendor/amp/' );
