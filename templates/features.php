@@ -5811,6 +5811,7 @@ if( ! function_exists( 'ampforwp_view_amp_admin_bar' ) ) {
 		}
 	}
 }
+
 //93. added AMP url purifire for amphtml
 function ampforwp_url_purifier($url){
 	global $wp_query,$wp,$redux_builder_amp;
@@ -5824,9 +5825,7 @@ function ampforwp_url_purifier($url){
 	$get_permalink_structure = get_option('permalink_structure');
 	$checker = $redux_builder_amp['amp-core-end-point'];
 	$endpointq = '?' . $endpoint;
-
 	if ( empty( $get_permalink_structure ) ) {
-
 		if ( is_home() || is_archive() || is_front_page() ) {
 			$url  = add_query_arg(AMPFORWP_AMP_QUERY_VAR,'1', $url);
 			if ( is_home() && get_query_var('page_id') == ampforwp_get_blog_details('id') ) {
@@ -5840,7 +5839,6 @@ function ampforwp_url_purifier($url){
 			}
 		}
 		if ( is_archive() ) {
-
 			if ( is_archive() ) {
 				$queried_var 	= 'm';
 			}
@@ -5857,18 +5855,6 @@ function ampforwp_url_purifier($url){
 			$url  = add_query_arg($queried_var,$quried_value, $url);
 			//$url = $url .'&'. $queried_var .'='. $quried_value;
 		}
-		/*if ( is_home() && get_query_var('paged') > 1 ) {
-			$quried_value = get_query_var('paged');
-			$url = add_query_arg('paged',$quried_value, $url);
-			if ( get_query_var('page_id') == ampforwp_get_blog_details('id') ) {
-				$quried_value2 = get_query_var('page_id');
-				$url = add_query_arg('page_id',$quried_value2, $url);
-			}
-		}
-		elseif ( is_home() && get_query_var('paged') < 1 && get_query_var('page_id') == ampforwp_get_blog_details('id') ) {
-			$quried_value2 = get_query_var('page_id');
-			$url = add_query_arg('page_id',$quried_value2, $url);
-		}*/
 	} else {
 		if ( is_singular() && true == $checker ) {
 			$url = untrailingslashit($url);
@@ -5888,8 +5874,13 @@ function ampforwp_url_purifier($url){
       	}
 	}
 	if ( is_singular() && !empty($_SERVER['QUERY_STRING']) ) {
-		$query_arg 	= wp_parse_args($_SERVER['QUERY_STRING']);
-		$url 		= add_query_arg( $query_arg, $url);
+	      $query_arg   = wp_parse_args($_SERVER['QUERY_STRING']);
+	      $query_name = $wp_query->query['name'];
+	      if(strpos($_SERVER['QUERY_STRING'],$query_name) && (isset($query_arg['q']) && strpos($query_arg['q'],$query_name))){
+	          unset($query_arg['q']);
+	        }
+	      
+	      $url     = add_query_arg( $query_arg, $url);
 	}
 	return $url;
 }
@@ -7405,4 +7396,14 @@ function ampforwp_check_excerpt(){
 	}
  
 	return $value;
+}
+
+// Get Settings from Redux #2177
+function ampforwp_get_setting( $opt_name='' ){
+	global $redux_builder_amp;
+	$opt_value = '';
+	if ( isset($redux_builder_amp[$opt_name]) ) {
+		$opt_value = $redux_builder_amp[$opt_name];
+	}
+	return $opt_value;
 }
