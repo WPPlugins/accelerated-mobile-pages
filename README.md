@@ -4,7 +4,7 @@ Tags: AMP, accelerated mobile pages, mobile, amp project, google amp, amp wp, go
 Donate link: https://www.paypal.me/Kaludi/25
 Requires at least: 3.0
 Tested up to: 4.9.8
-Stable tag: 0.9.97.12
+Stable tag: 0.9.97.13
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -183,8 +183,12 @@ You can contact us from [here](https://ampforwp.com/contact/)
 
 == Changelog ==
 
+= 0.9.97.13 (27th August 2018) =
+* Fixed: Fatal error in `ampforwp_related_post_loop_query()`
+
 = 0.9.97.12 (27th August 2018) =
 * Fixed: Quote runs only in block post not on pages #2399
+
 * Added: Create a Sidebar option that can be used as global Sidebar #2388
 * Fixed: words are breaking and not readable #2441
 * Fixed: Text is breaking into next line while there is no space between the text in custom AMP Editor #2270
