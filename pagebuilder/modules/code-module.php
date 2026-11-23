@@ -1,5 +1,6 @@
 <?php 
-
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) exit;
 add_filter("ampforwp_extension_pagebuilder_module_template", 'ampforwp_code_module_replacement',10,3);
 function ampforwp_code_module_replacement($moduleFrontHtml,$moduleTemplate, $contentArray){
 	if($moduleTemplate['name']==='code'){
@@ -19,11 +20,6 @@ function ampforwp_code_module_replacement($moduleFrontHtml,$moduleTemplate, $con
 		
 	}
 	return $moduleFrontHtml;
-}
-function ampforwp_runCompleteCode($moduleFrontHtml){
-	if(!empty($moduleFrontHtml)){
-		return eval( "?>". $moduleFrontHtml . "<?php " );
-	}
 }
 
 $output = '{{code_content}}';

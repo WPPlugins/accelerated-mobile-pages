@@ -1,6 +1,8 @@
 <?php 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) exit;
 $output = '
-<div class="ln-fx">{{repeater}}</div>';
+<div {{if_id}}id="{{id}}"{{ifend_id}} class="ln-fx {{user_class}}">{{repeater}}</div>';
 $css = '
 {{if_condition_pricing_layout_type==1}}
 .pricing-mod{margin:{{margin_css}};padding:{{padding_css}};}
@@ -23,15 +25,20 @@ $css = '
 {{ifend_condition_pricing_layout_type_1}}
 
 ';
+if( ampforwp_get_setting('amp-design-selector') != 4 ) {
+ $css .= '@media(max-width:768px){
+	.pri-mod{flex:100%;margin:0px 0px 20px 0px;}
+}';
+}
 return array(
 		'label' =>'Pricing',
 		'name' =>'pricing-mod',
 		'default_tab'=> 'customizer',
 		'tabs' => array(
               'customizer'=>'Content',
+              'layouts'=> 'Layouts',
               'design'=>'Design',
-              'advanced' => 'Advanced',
-              'layouts'=> 'Layouts'
+              'advanced' => 'Advanced'
             ),
 		'fields' => array(
 						array(    
@@ -65,6 +72,22 @@ return array(
 								'tab'		=>'design',
 								'default'	=>'#333',
 								'content_type'=>'css'
+							),
+	 					array(
+								'type'		=>'text',
+								'name'		=>"id",
+								'label'		=>'ID',
+								'tab'		=>'advanced',
+								'default'	=>'',
+								'content_type'=>'html'
+							),
+	 					array(
+								'type'		=>'text',
+								'name'		=>"user_class",
+								'label'		=>'Class',
+								'tab'		=>'advanced',
+								'default'	=>'',
+								'content_type'=>'html'
 							),
 						array(
 								'type'		=>'spacing',
@@ -153,6 +176,20 @@ return array(
 	 											),
 	 							'content_type'=>'html',
 	 						),
+	 					array(
+			                    'type'    =>'checkbox_bool',
+			                    'name'    =>"check_for_nofollow_price",
+			                    'label'   => 'Nofollow Link',
+			                    'tab'   =>'customizer',
+			                    'default' =>0,
+			                    'options' =>array(
+			                            array(
+			                              'label'=>'Yes',
+			                              'value'=>1,
+			                            )
+			                          ),
+			                    'content_type'=>'html',
+                            ),
 						array(		
 		 						'type'		=>'text-editor',		
 		 						'name'		=>"text_desc",		
@@ -178,7 +215,7 @@ return array(
 					{{if_recommended_text}}<span class="pri-recom">{{recommended_text}}</span>{{ifend_recommended_text}}
 					<span class="pri-lbl">{{price_label}}</span>
 					<span class="pri-desc">{{price_desc}}</span>
-					<a href="{{btn_link}}" {{if_condition_page_link_open_price==new_page}}target="_blank"{{ifend_condition_page_link_open_price_new_page}} class="btn-txt">{{btn_title}}</a>
+					<a href="{{btn_link}}" {{if_condition_page_link_open_price==new_page}}target="_blank"{{ifend_condition_page_link_open_price_new_page}} {{if_condition_check_for_nofollow_price==1}}rel="nofollow"{{ifend_condition_check_for_nofollow_price_1}}  class="btn-txt">{{btn_title}}</a>
 					<div class="pri-cnt">
 						{{text_desc}}
 					</div>

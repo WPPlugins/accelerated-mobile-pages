@@ -21,7 +21,8 @@ Vue.component('amp-pagebuilder-modal', {
   		innerLayouts: '',
   		innerLayoutsHeading: '',
   		ampb_script_textarea: (app.mainContent.settingdata['scripts_data']? app.mainContent.settingdata['scripts_data']: ''),
-  		ampb_style_textarea: (app.mainContent.settingdata['style_data']? app.mainContent.settingdata['style_data']:'')
+  		ampb_style_textarea: (app.mainContent.settingdata['style_data']? app.mainContent.settingdata['style_data']:''),
+  		layoutMsg: ''
   	}
   },
   methods:{
@@ -37,6 +38,44 @@ Vue.component('amp-pagebuilder-modal', {
 		app.mainContent.settingdata['style_data'] = this.ampb_style_textarea;
 		this.hidePageBuilderPopUp();
 	},
+	removeSavedLayout: function(postId){
+		var saveLayoutData = {
+							action: 'amppb_remove_saved_layout_data',
+							layoutid:postId,
+							verify_nonce: amppb_panel_options.secure_nonce
+							};
+		this.$http.post(amppb_panel_options.ajaxUrl+'?action=amppb_remove_saved_layout_data', 
+						saveLayoutData,
+						{
+						headers:{
+							responseType:'json'
+						},
+						responseType:'json',
+						emulateHTTP:true,
+						emulateJSON:true,
+						}
+					).then(function(response){
+						response =response.body;
+						if(response.status=="200"){
+							this.layoutMsg = "Layout removed successfully!";
+							this.showsavedLayouts = response.data;
+							amppb_panel_options.savedLayouts = this.showsavedLayouts;
+ 							this.save_layout = {name:"",url:""};
+						}
+						else if(response.status=="404"){
+							this.layoutMsg = "Try Again";
+						}else if(response.status=="403"){
+							this.layoutMsg = "Sorry! You don't have permission to delete the layout.";
+						}
+					    setTimeout(() => {
+				          	this.layoutMsg = '';
+				      	},5000);
+					},
+					 //errorCallback
+					 function(){
+					 	alert('connection not establish');
+					 });
+	},
 	savePagebuildercustomLayout: function(event){
 		if(!this.save_layout.name && this.save_layout.name==""){
 			alert("Please enter name of layout");
@@ -45,7 +84,8 @@ Vue.component('amp-pagebuilder-modal', {
 		var saveLayoutData = {
 							action: 'amppb_save_layout_data',
 							layoutname:this.save_layout.name,
-							layoutdata: JSON.stringify(this.currentLayoutData)
+							layoutdata: JSON.stringify(this.currentLayoutData),
+							verify_nonce: amppb_panel_options.secure_nonce
 							};
 		this.$http.post(amppb_panel_options.ajaxUrl+'?action=amppb_save_layout_data', 
 						saveLayoutData,
@@ -152,6 +192,9 @@ Vue.component('amp-pagebuilder-module-modal', {
   			repeatHead.html('(Hide)');
   		}
   	},
+  	showhideAccordian:function(event){
+  		jQuery(event.target).parent(".amp-accordion-head").click();
+  	},
   	hideModulePopUp: function(event){
 			app.showmoduleModal = false;
 		},
@@ -199,10 +242,17 @@ Vue.component('amp-pagebuilder-module-modal', {
 								app.modalcontent.repeater.showFields.forEach(function(repeatWrapper,repKey){
 									var repeaterData = {};
 									repeatWrapper.forEach(function(repeatField,repFieldKey){
-										repeaterData[repeatField.name] = repeatField.default;
-										if(repeatField[repeatField.name+"_image_data"]){
-											repeaterData[repeatField.name+"_image_data"] = repeatField[repeatField.name+"_image_data"];
+										var stringToArray = repeatField.name.split("_");
+										stringToArray.pop();
+										var arrayToString = stringToArray.join('_');
+										var finalString = arrayToString+"_"+repKey;
+										repeaterData[finalString] = repeatField.default;
+										if(repeatField[finalString+"_image_data"]){
+											repeaterData[finalString+"_image_data"] = repeatField[finalString+"_image_data"];
+										 
 										}
+										 
+									 
 									});
 									repeaterData['index'] = (repKey+1);
 									moduleData.repeater.push(repeaterData);
@@ -213,7 +263,7 @@ Vue.component('amp-pagebuilder-module-modal', {
 				}else if(app.modalType=='rowSetting'){
 					var a = {};
 					fields.forEach(function(fieldData,fieldKey){
-						a[fieldData.name] = fieldData.default
+						a[fieldData.name] = fieldData.default;
 						if(fieldData[fieldData.name+"_image_data"]){
 							a[fieldData.name+"_image_data"] = fieldData[fieldData.name+"_image_data"];
 						}
@@ -269,7 +319,12 @@ Vue.component('amp-pagebuilder-module-modal', {
 		}
 		return returnOpt;
 	},
-
+	repeater_rows_moved: function(evt){
+		if(evt && evt.type=='end'){
+			this.$forceUpdate();
+		}
+		return true;
+	  },
 
 
 	editModuleTitle: function(modalcontent){
@@ -365,7 +420,11 @@ function openModulePopup(event,type){
 							//if(moduleData[fieldData.name] && moduleData[fieldData.name]!=''){
 
 								if(fieldData.name in moduleData){
-									var userValues = moduleData[fieldData.name];
+									if(typeof moduleData[fieldData.name] !='undefined'){
+										var userValues = moduleData[fieldData.name];
+									}else{
+										var userValues = fieldData.default;
+									}
 								}else{
 									var userValues = fieldData.default;
 								}
@@ -395,7 +454,9 @@ function openModulePopup(event,type){
 										newFields.name = newFields.name+'_'+savedkey;
 										//if(savedREPValue[newFields.name]){
 											//console.log(savedREPValue[newFields.name],newFields.name)
+											if(typeof savedREPValue[newFields.name] !='undefined'){
 											newFields.default = savedREPValue[newFields.name];
+											}
 										//}
 									})
 									app.modalcontent.repeater.showFields.push(Vue.util.extend([], allRepeaterFileds));
@@ -472,6 +533,11 @@ Vue.component('fields-data',{
 	  		var self = this;
 	  		//this.callChangeEnvent();
 	  })
+	},
+	beforeMount: function(){
+		if ( this.field.ajax == true ) {
+			this.changeOnSelect();
+		}
 	},
 	computed: {
 		filteredIcons: function(){
@@ -555,7 +621,7 @@ Vue.component('fields-data',{
 				console.log(jQuery(currentSelectfield).parents('p'))
 				jQuery(currentSelectfield).parents('p').find('img').attr('src','../wp-includes/images/spinner.gif');
 			}
-		        this.$http.post(amppb_panel_options.ajaxUrl+'?action=ampforwp_get_image&id='+the_id, 
+		        this.$http.post(amppb_panel_options.ajaxUrl+'?action=ampforwp_get_image&id='+the_id+'&verify_nonce='+amppb_panel_options.secure_nonce, 
 						{}
 						,{
 							headers:{
@@ -612,7 +678,9 @@ Vue.component('fields-data',{
 		},
 		fieldShowHideCheck: function(field){
 			var returnOpt = [];
-			returnOpt.push(true);
+			if( !field.required_type){
+				returnOpt.push(true);
+			}
 			if(field.required){
 				var requiredCondition = field.required;
 
@@ -624,7 +692,9 @@ Vue.component('fields-data',{
 								for(var i = 0; i < length; i++) {
 			                        if(requiredCondition[maindata.name][i] == maindata.default){
 			                        	checkingInArray = true;
-			                        	return false;	
+			                        	if( !field.required_type){
+			                        		return false;	
+			                        	}
 			                        } 
 			                    }
 			                    if(checkingInArray){
@@ -645,12 +715,81 @@ Vue.component('fields-data',{
 				    return self.indexOf(value) === index;
 					});
 
-			if(returnOpt.length==1 && returnOpt[0]==true){
-				return true;
+			if(field.required_type == 'or'){
+				var reqOpt = returnOpt.indexOf(true);
+				if( reqOpt!= -1){
+					return true;
+				}else{
+					return false;
+				}
 			}else{
-				return false;
+				if(returnOpt.length==1 && returnOpt[0]==true){
+					return true;
+				}else{
+					return false;
+				}
 			}
 			return false;
+		},
+		changeOnSelect: function(){ //event, field
+			var dataAjax = this.field.ajax;//currentSelectfield.getAttribute("data-ajax-dep");
+			var dataAjaxDep = this.field.ajax_dep;//currentSelectfield.getAttribute("data-ajax-dep");
+			var ajaxAction = this.field.ajax_action;//currentSelectfield.getAttribute("data-ajax-action");
+			if('category_selection'==dataAjaxDep || 'taxonomy_selection'==dataAjaxDep){
+				if(document.getElementById(dataAjaxDep+"1")){
+					document.getElementById(dataAjaxDep+"1").style.visibility = "visible";
+				}
+			}
+			if(typeof dataAjax == 'undefined'){ console.log(dataAjax);  return ; }//return if Selectbox not allowed ajax
+			this.$http.post(amppb_panel_options.ajaxUrl+'?action='+ajaxAction, 
+				{
+					'selected_val': this.field.default,
+					'verify_nonce': amppb_panel_options.secure_nonce
+				}
+				,{
+					headers:{
+						responseType:'json'
+					},
+					responseType:'json',
+					emulateHTTP:true,
+					emulateJSON:true,
+				}
+			).then(function(response){
+				response =response.body;
+				 if(response.success === true) {
+				 	var option_html = '';				 	
+				 	app.modalcontent.fields.forEach(function(modaldata, key){
+				 		if(modaldata.name==dataAjaxDep){
+				 			modaldata.options_details = response.data;
+				 				
+				 				// Add default selection for Taxonomy and Category dropdown in Category Module.
+								setTimeout(function(){
+									let tval = jQuery("#taxonomy_selection").children().children('select').val();
+									let cval = jQuery("#category_selection").children().children('select').val();
+									if(tval==""){
+										jQuery("#taxonomy_selection").children().children('select').val('recent_option');
+									}
+									if (cval == ''){
+										jQuery("#category_selection").children().children('select').val('recent_option');
+									}
+
+								},250);
+
+				 			if(document.getElementById(dataAjaxDep+"1")){
+								document.getElementById(dataAjaxDep+"1").style.visibility = "hidden";
+				 			}
+				 		}
+				 	});
+				 }else{
+				 	alert(response.message);
+				 }
+				
+			},
+			//errorCallback
+			function(){
+				alert('connection not establish');
+			});			
+
 		}
 
 	}
@@ -704,27 +843,36 @@ Vue.component('textarea-wysiwyg', {
   props: [ 'defaultText','fieldindex' ],
   mounted: function() {
   	var componentPoint = this;
-	console.log(jQuery(this.$el));
+	var useEditor = wp.oldEditor;
+ 	if(!useEditor){
+    	useEditor = wp.editor;
+  	}
 	var textareaId = jQuery(this.$el).find('textarea').attr('id');
-	if(wp.editor){
-		wp.editor.initialize(textareaId, {
+	if(useEditor){
+		useEditor.initialize(textareaId, {
 									tinymce: true,
 									quicktags: true,
 								})
 		var editor = window.tinymce.get( textareaId );
 		editor.on( 'blur hide', function onEditorBlur() {
-				componentPoint.defaultText.default = wp.editor.getContent(textareaId);
+				componentPoint.defaultText.default = useEditor.getContent(textareaId);
 		});
-
+		jQuery("#"+textareaId).on('change', function(){
+      	componentPoint.defaultText.default = useEditor.getContent(textareaId);
+    	});
 	}
   	
   },
   
   beforeDestroy: function() {
   	var componentPoint = this;
-  	if(wp.editor){
+  	var useEditor = wp.oldEditor;
+ 	if(!useEditor){
+    	useEditor = wp.editor;
+  	}
+  	if(useEditor){
   		var textareaId = jQuery(this.$el).find('textarea').attr('id');
-  		wp.editor.remove(textareaId);
+  		useEditor.remove(textareaId);
 	}
   }
 });
@@ -1031,7 +1179,7 @@ var app = new Vue({
 		},
 		amppb_startFunction: function(event){
 			var postId = event.target.getAttribute('data-postId');
-			this.$http.post(amppb_panel_options.ajaxUrl+'?action=enable_amp_pagebuilder', 
+			this.$http.post(amppb_panel_options.ajaxUrl+'?action=enable_amp_pagebuilder&verify_nonce='+amppb_panel_options.secure_nonce, 
 				{
 					postId
 				}
@@ -1060,7 +1208,7 @@ var app = new Vue({
 		ampforwp_icon_list: function(){
 			if(this.startPagebuilder==1){
 
-				this.$http.post(amppb_panel_options.ajaxUrl+'?action=ampforwp_icons_list_format', 
+				this.$http.post(amppb_panel_options.ajaxUrl+'?action=ampforwp_icons_list_format&verify_nonce='+amppb_panel_options.secure_nonce, 
 					{}
 					,{
 						headers:{

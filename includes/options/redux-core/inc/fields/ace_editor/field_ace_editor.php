@@ -1,5 +1,5 @@
 <?php
-
+namespace ReduxCore\ReduxFramework;
     /**
      * Redux Framework is free software: you can redistribute it and/or modify
      * it under the terms of the GNU General Public License as published by
@@ -23,8 +23,11 @@
     }
 
 // Don't duplicate me!
-    if ( ! class_exists( 'ReduxFramework_ace_editor' ) ) {
+    if ( ! class_exists( 'ReduxCore\\ReduxFramework\\ReduxFramework_ace_editor' ) ) {
         class ReduxFramework_ace_editor {
+            public $parent;
+            public $field;
+            public $value;
 
             /**
              * Field Constructor.
@@ -33,7 +36,7 @@
              * @since ReduxFramework 1.0.0
              */
             private $time = '';
-            function __construct( $field = array(), $value = '', $parent ) {
+            function __construct( $field = array(), $value = '', $parent = ' ' ) {
                 $this->parent = $parent;
                 $this->field  = $field;
                 $this->value  = $value;
@@ -83,10 +86,10 @@
                 <div class="ace-wrapper">
                     <input type="hidden" 
                         class="localize_data"
-                        value="<?php echo htmlspecialchars( json_encode( $params ) ); ?>"
+                        value="<?php /* phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped */ echo htmlspecialchars( wp_json_encode( $params ) ); ?>"
                     />
                     <textarea name="<?php echo esc_attr($this->field['name'] . $this->field['name_suffix']); ?>" id="<?php echo esc_attr($this->field['id']); ?>-textarea" class="ace-editor hide <?php echo esc_attr($this->field['class']); ?>" data-editor="<?php echo esc_attr($this->field['id']); ?>-editor" data-mode="<?php echo esc_attr($this->field['mode']); ?>" data-theme="<?php echo esc_attr($this->field['theme']); ?>"><?php echo esc_textarea($this->value); ?></textarea>
-                    <pre id="<?php echo esc_attr($this->field['id']); ?>-editor" class="ace-editor-area"><?php echo htmlspecialchars( $this->value ); ?></pre>
+                    <pre id="<?php echo esc_attr($this->field['id']); ?>-editor" class="ace-editor-area"><?php /* phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped */ echo htmlspecialchars( $this->value ); ?></pre>
                 </div>
             <?php
             }
@@ -113,11 +116,11 @@
                 }
 
                 if ( ! wp_script_is( 'ace-editor-js' ) ) {
-                    Redux_CDN::enqueue_script(
+                    wp_enqueue_script(
                         'ace-editor-js',
-                        '//cdn.jsdelivr.net/ace/1.1.9/min/ace.js',
+                        ReduxFramework::$_url . 'inc/fields/ace_editor/ace/ace.js',
                         array( 'jquery' ),
-                        $this->time, //'1.1.9',
+                        $this->time,
                         true
                     );
                 }

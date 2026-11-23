@@ -1,6 +1,8 @@
 <?php
-
-
+namespace ReduxCore\ReduxFramework;
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
     /**
      * Customizer section representing widget area (sidebar).
      *
@@ -9,7 +11,7 @@
      * @since      4.1.0
      * @see        WP_Customize_Section
      */
-    class Redux_Customizer_Section extends WP_Customize_Section {
+    class Redux_Customizer_Section extends \WP_Customize_Section {
 
         /**
          * Type of this section.
@@ -69,14 +71,14 @@
             <li id="accordion-section-{{ data.id }}" class="redux-section accordion-section control-section control-section-{{ data.type }}">
                 <h3 class="accordion-section-title" tabindex="0">
                     {{ data.title }}
-                    <span class="screen-reader-text"><?php _e( 'Press return or enter to open', 'redux-framework' ); ?></span>
+                    <span class="screen-reader-text"><?php esc_html_e( 'Press return or enter to open', 'accelerated-mobile-pages' ); ?></span>
                 </h3>
                 <ul class="accordion-section-content redux-main">
 
                     <li class="customize-section-description-container">
                         <div class="customize-section-title">
                             <button class="customize-section-back" tabindex="-1">
-                                <span class="screen-reader-text"><?php _e( 'Back', 'redux-framework' ); ?></span>
+                                <span class="screen-reader-text"><?php esc_html_e( 'Back', 'accelerated-mobile-pages' ); ?></span>
                             </button>
                             <h3>
 							<span class="customize-action">
@@ -119,7 +121,7 @@
                             ),
                         ) );
                     ?>
-                    <span class="screen-reader-text"><?php esc_attr_e( 'Press return or enter to expand', 'redux-framework' ); ?></span>
+                    <span class="screen-reader-text"><?php esc_attr_e( 'Press return or enter to expand', 'accelerated-mobile-pages' ); ?></span>
                 </h3>
                 <ul class="accordion-section-content redux-main">
                     <?php
@@ -129,7 +131,7 @@
                     ?>
                     <?php if ( ! empty( $this->description ) ) : ?>
                         <li class="customize-section-description-container">
-                            <p class="description customize-section-description legacy"><?php echo $this->description; ?></p>
+                            <p class="description customize-section-description legacy"><?php /* phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped */ echo $this->description; ?></p>
                         </li>
                     <?php endif; ?>
                 </ul>

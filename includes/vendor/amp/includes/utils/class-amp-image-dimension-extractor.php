@@ -1,8 +1,13 @@
 <?php
+namespace AMPforWP\AMPVendor;
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
 class AMP_Image_Dimension_Extractor {
 	static $callbacks_registered = false;
 	const STATUS_FAILED_LAST_ATTEMPT = 'failed';
 	const STATUS_IMAGE_EXTRACTION_FAILED = 'failed';
+	const STATUS_IMAGE_EXTRACTION_INVALID = 'invalid';
 
 	static public function extract( $urls ) {
 		if ( ! self::$callbacks_registered ) {
@@ -81,7 +86,8 @@ class AMP_Image_Dimension_Extractor {
 	 * @return array Dimensions mapped to image urls, or false if they could not be retrieved
 	 */
 	public static function extract_by_downloading_images( $dimensions, $mode = 'concurrent' ) {
-		$transient_expiration = 30 * DAY_IN_SECONDS;
+		$transient_expiration = 8 * DAY_IN_SECONDS;
+		$transient_expiration = apply_filters('ampforwp_image_expiration_time', $transient_expiration);
 
 		$urls_to_fetch = array();
 		$images = array();
@@ -175,10 +181,10 @@ class AMP_Image_Dimension_Extractor {
 	 */
 	private static function fetch_images_via_fast_image( $urls_to_fetch, &$images ) {
 		if ( ! class_exists( 'FastImage' ) ) {
-			require_once( AMP__DIR__ . '/includes/lib/fastimage/class-fastimage.php' );
+			require_once( AMP__VENDOR__DIR__ . '/includes/lib/fastimage/class-fastimage.php' );
 		}
 
-		$image = new FastImage();
+		$image = new \FastImage();
 		$urls = array_keys( $urls_to_fetch );
 
 		foreach ( $urls as $url ) {
@@ -202,11 +208,11 @@ class AMP_Image_Dimension_Extractor {
 		$urls = array_keys( $urls_to_fetch );
 
 		if ( ! function_exists( 'amp_get_fasterimage_client' ) ) {
-			require_once( AMP__DIR__ . '/includes/lib/fasterimage/amp-fasterimage.php' );
+			require_once( AMP__VENDOR__DIR__ . '/includes/lib/fasterimage/amp-fasterimage.php' );
 		}
 
 		$user_agent = apply_filters( 'amp_extract_image_dimensions_get_user_agent', self::get_default_user_agent() );
-		$client = amp_get_fasterimage_client( $user_agent );
+		$client = \amp_get_fasterimage_client( $user_agent );
 		$images = $client->batch( $urls );
 	}
 
@@ -221,8 +227,30 @@ class AMP_Image_Dimension_Extractor {
 	 */
 	private static function process_fetched_images( $urls_to_fetch, $images, &$dimensions, $transient_expiration ) {
 		foreach ( $urls_to_fetch as $url_data ) {
+			$image = array();
+			$attachment_id = '';
 			$image_data = $images[ $url_data['url'] ];
-			if ( self::STATUS_IMAGE_EXTRACTION_FAILED === $image_data['size'] ) {
+			// Fallback #2931
+			if ( self::STATUS_IMAGE_EXTRACTION_FAILED === $image_data['size']  || self::STATUS_IMAGE_EXTRACTION_INVALID  === $image_data['size']) {
+				$attachment_id = attachment_url_to_postid($url_data['url']);
+				$image = wp_get_attachment_image_src($attachment_id, 'full');
+				if ( $image ) {
+					$image_data['size'] = array($image[1],$image[2]);
+				}else {
+					$urlArraydata     = explode( '-', $url_data['url'] );
+					$urlArrayLastdata = end( $urlArraydata );
+					$parsed_url       = explode( 'x', $urlArrayLastdata );
+					if ( is_array( $parsed_url ) ) {
+						if (array_key_exists( 1, $parsed_url )){
+  							$height = explode( '.', $parsed_url[1] );
+  						}
+  						if (isset($height[0]) && !empty($height[0])) {
+  							$image_data['size'] = array( $parsed_url[0], $height[0] );
+  						}
+					}
+				}
+			}
+			if ( self::STATUS_IMAGE_EXTRACTION_FAILED === $image_data['size']  || self::STATUS_IMAGE_EXTRACTION_INVALID  === $image_data['size']) {
 				$dimensions[ $url_data['url'] ] = false;
 				set_transient( $url_data['transient_name'], self::STATUS_FAILED_LAST_ATTEMPT, $transient_expiration );
 			} else {
@@ -250,6 +278,6 @@ class AMP_Image_Dimension_Extractor {
 	 * @return string
 	 */
 	public static function get_default_user_agent() {
-		return 'amp-wp, v' . AMP__VERSION . ', ' . get_site_url();
+		return 'amp-wp, v' . AMP__VENDOR__VERSION . ', ' . get_site_url();
 	}
 }

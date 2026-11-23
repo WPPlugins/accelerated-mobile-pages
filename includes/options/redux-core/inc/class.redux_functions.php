@@ -1,5 +1,5 @@
 <?php
-
+    namespace ReduxCore\ReduxFramework;
     /**
      * Redux Framework Private Functions Container Class
      *
@@ -13,7 +13,7 @@
     }
 
 // Don't duplicate me!
-    if ( ! class_exists( 'Redux_Functions' ) ) {
+    if ( ! class_exists( 'ReduxCore\\ReduxFramework\\Redux_Functions' ) ) {
 
         /**
          * Redux Functions Class
@@ -51,8 +51,8 @@
              * @param   boolean $secure   HTTPS only.
              * @param   boolean $httponly Only set cookie on HTTP calls.
              */
-            public static function setCookie( $name, $value, $expire = 0, $path, $domain = null, $secure = false, $httponly = false ) {
-                if ( ! defined( 'WP_TESTS_DOMAIN' ) ) {
+            public static function setCookie( $name, $value, $expire = 0, $path = '', $domain = null, $secure = false, $httponly = false ) {
+                if ( ! defined( 'WP_TESTS_DOMAIN' ) && !empty($path)) {
                     setcookie( $name, $value, $expire, $path, $domain, $secure, $httponly );
                 }
             }
@@ -194,6 +194,7 @@
 
                     // saved value from cookie.  If it's different from current ver
                     // we can still show the update notice.
+                    /* phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized */
                     $ver = $_COOKIE['redux_update_check'];
                 }
 
@@ -225,12 +226,7 @@
                 } else {
 
                     if ( empty( $check ) ) {
-                        $check = @wp_remote_get( 'http://look.reduxframework.com/status.php?p=' . ReduxFramework::$_is_plugin );
-                        $check = json_decode( wp_remote_retrieve_body( $check ), true );
-
-                        if ( ! empty( $check ) && isset( $check['id'] ) ) {
-                            update_user_option( get_current_user_id(), 'r_tru_u_x', $check );
-                        }
+                        
                     }
                     $check = isset( $check['id'] ) ? $check['id'] : $check;
                     if ( ! empty( $check ) ) {

@@ -1,6 +1,9 @@
 <?php
-
-require_once AMP__DIR__ . '/includes/sanitizers/class-amp-base-sanitizer.php';
+namespace AMPforWP\AMPVendor;
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+require_once AMP__VENDOR__DIR__ . '/includes/sanitizers/class-amp-base-sanitizer.php';
 
 /**
  * Converts Playbuzz embed to <amp-playbuzz>

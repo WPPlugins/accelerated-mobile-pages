@@ -1,5 +1,7 @@
 <?php
-
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
     if ( ! class_exists( 'Redux_Validation_no_html' ) ) {
         class Redux_Validation_no_html {
 
@@ -12,7 +14,7 @@
             function __construct( $parent, $field, $value, $current ) {
                 $this->parent       = $parent;
                 $this->field        = $field;
-                $this->field['msg'] = ( isset( $this->field['msg'] ) ) ? $this->field['msg'] : __( 'You must not enter any HTML in this field, all HTML tags have been removed.', 'redux-framework' );
+                $this->field['msg'] = ( isset( $this->field['msg'] ) ) ? $this->field['msg'] : __( 'You must not enter any HTML in this field, all HTML tags have been removed.', 'accelerated-mobile-pages' );
                 $this->value        = $value;
                 $this->current      = $current;
 
@@ -27,7 +29,7 @@
              */
             function validate() {
 
-                $newvalue = strip_tags( $this->value );
+                $newvalue = wp_strip_all_tags( $this->value );
 
                 if ( $this->value != $newvalue ) {
                     $this->warning = $this->field;

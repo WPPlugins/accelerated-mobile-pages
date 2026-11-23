@@ -1,5 +1,8 @@
 <?php
-
+namespace AMPforWP\AMPVendor;
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
 abstract class AMP_Base_Sanitizer {
 	const FALLBACK_HEIGHT = 400;
 
@@ -8,6 +11,7 @@ abstract class AMP_Base_Sanitizer {
 	protected $dom;
 	protected $args;
 	protected $did_convert_elements = false;
+	const AMP_IMAGE_LIGHTBOX_ID = 'amp-image-lightbox';
 	/**
 	 * The root element used for sanitization. Either html or body.
 	 *
@@ -44,8 +48,9 @@ abstract class AMP_Base_Sanitizer {
 			return $value;
 		}
 
-		if ( false !== filter_var( $value, FILTER_VALIDATE_INT ) ) {
-			return absint( $value );
+		// Accepts both integers and floats & prevents negative values #5005
+		if ( is_numeric( $value ) ) {
+			return max( 0, (float) $value );
 		}
 
 		if ( AMP_String_Utils::endswith( $value, 'px' ) ) {
@@ -196,5 +201,25 @@ abstract class AMP_Base_Sanitizer {
 				$element->removeAttributeNode( $attribute );
 			}
 		}
+	}
+	/**
+	 * Add <amp-image-lightbox> element to body tag if it doesn't exist yet.
+	 */
+	public function maybe_add_amp_image_lightbox_node() {
+ 		$nodes = $this->dom->getElementById( self::AMP_IMAGE_LIGHTBOX_ID );
+		if ( null !== $nodes ) {
+			return;
+		}
+ 		$nodes = $this->dom->getElementsByTagName( 'body' );
+		if ( ! $nodes->length ) {
+			return;
+		}
+		$body_node          = $nodes->item( 0 );
+		$amp_image_lightbox = AMP_DOM_Utils::create_node( $this->dom, 'amp-image-lightbox', array(
+			'id'                           => self::AMP_IMAGE_LIGHTBOX_ID,
+			'layout'                       => 'nodisplay',
+			'data-close-button-aria-label' => esc_html__( 'Close', 'amp' ),
+		) );
+		$body_node->appendChild( $amp_image_lightbox );
 	}
 }

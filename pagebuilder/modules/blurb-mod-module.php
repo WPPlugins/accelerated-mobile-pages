@@ -1,5 +1,7 @@
 <?php 
-$output = '<div class="ln-fx">{{repeater}}</div>';
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) exit;
+$output = '<div {{if_id}}id="{{id}}"{{ifend_id}} class="ln-fx {{if_user_class}}{{user_class}}{{ifend_user_class}}">{{repeater}}</div>';
 $css = '
 {{if_condition_blurb_layout_type==1}}
 {{module-class}} .ln-fx{width:100%;display:flex; flex-wrap:wrap;margin:{{margin_css}};padding:{{padding_css}};}
@@ -54,9 +56,9 @@ $css = '
 }
 
 
-';
+'; 
 global $redux_builder_amp;
-if($redux_builder_amp['amp-rtl-select-option']){
+if(ampforwp_get_setting('amp-rtl-select-option')){
 	$css .= '/** RTL CSS **/
 	.blu-mod{
 	    margin: 0 0% 3% 3%;
@@ -79,9 +81,9 @@ return array(
 		'default_tab'=> 'customizer',
 		'tabs' => array(
               'customizer'=>'Content',
+              'layout' => 'Layout',
               'design'=>'Design',
-              'advanced' => 'Advanced',
-			  'layout' => 'Layout'
+              'advanced' => 'Advanced'
             ),
 		'fields' => array(
 						array(    
@@ -295,19 +297,35 @@ return array(
                             ),
 								'content_type'=>'css',
 							),
-							array(
-								'type'		=>'spacing',
-								'name'		=>"padding_gpg",
-								'label'		=>'Padding',
-								'tab'		=>'design',
-								'default'	=>array(
-													'left'=>'30px',
-													'right'=>'30px',
-													'top'=>'50px',
-													'bottom'=>'50px'
-												),
-								'content_type'=>'css',
-							),
+						array(
+							'type'		=>'spacing',
+							'name'		=>"padding_gpg",
+							'label'		=>'Padding',
+							'tab'		=>'design',
+							'default'	=>array(
+												'left'=>'30px',
+												'right'=>'30px',
+												'top'=>'50px',
+												'bottom'=>'50px'
+											),
+							'content_type'=>'css',
+						),
+						array(
+							'type'		=>'text',
+							'name'		=>"id",
+							'label'		=>'ID',
+							'tab'		=>'advanced',
+							'default'	=>'',
+							'content_type'=>'html'
+						),
+						array(
+							'type'		=>'text',
+							'name'		=>"user_class",
+							'label'		=>'Class',
+							'tab'		=>'advanced',
+							'default'	=>'',
+							'content_type'=>'html'
+						),
 						array(
 								'type'		=>'spacing',
 								'name'		=>"margin_css",
@@ -361,6 +379,22 @@ return array(
 		           				'content_type'=>'html',
 	 						),
 						array(		
+	 							'type'	=>'select',		
+	 							'name'  =>'blurb_head_type',
+	 							'label' => did_action( 'init' ) ? esc_html__('Header Type', 'accelerated-mobile-pages') : esc_html('Header Type'),
+								'tab'     =>'customizer',
+	 							'default' =>'h3',
+	 							'options_details'=>array(
+	 												'h1'  	=>'H1',
+	 												'h2'  	=>'H2',
+	 												'h3'  	=>'H3',
+	 												'h4'  	=>'H4',
+	 												'h5'  	=>'H5',
+	 												'h6'  	=>'H6',
+	 											),
+	 							'content_type'=>'html',
+	 					),
+						array(		
 		 						'type'		=>'text-editor',		
 		 						'name'		=>"content",		
 		 						'label'		=>'Content',
@@ -374,7 +408,7 @@ return array(
         '{{if_condition_blurb_layout_type==1}}
         	<div class="blu-mod">
 				<span class="ico-pic icon-{{icon-picker}}"></span>
-				<h3 class="blurb-txt">{{content_title}}</h3>
+				<{{blurb_head_type}} class="blurb-txt">{{content_title}}</{{blurb_head_type}}>
 				{{content}}
 			</div> 
 		{{ifend_condition_blurb_layout_type_1}}

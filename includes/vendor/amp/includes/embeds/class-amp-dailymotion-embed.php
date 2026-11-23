@@ -1,6 +1,9 @@
 <?php
-
-require_once( AMP__DIR__ . '/includes/embeds/class-amp-base-embed-handler.php' );
+namespace AMPforWP\AMPVendor;
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+require_once( AMP__VENDOR__DIR__ . '/includes/embeds/class-amp-base-embed-handler.php' );
 
 // Much of this class is borrowed from Jetpack embeds
 class AMP_DailyMotion_Embed_Handler extends AMP_Base_Embed_Handler {
@@ -58,6 +61,7 @@ class AMP_DailyMotion_Embed_Handler extends AMP_Base_Embed_Handler {
 		}
 
 		return $this->render( array(
+			'url'=>$url,
 			'video_id' => $video_id,
 		) );
 	}

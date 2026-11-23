@@ -1,4 +1,5 @@
 <?php
+namespace ReduxCore\ReduxFramework;
 /**
  * Redux Framework is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +21,7 @@
 // Exit if accessed directly
 if( !defined( 'ABSPATH' ) ) exit;
 // Don't duplicate me!
-if( !class_exists( 'ReduxFramework_extension_amp_slider' ) ) {
+if( !class_exists( 'ReduxCore\\ReduxFramework\\ReduxFramework_extension_amp_slider' ) ) {
     /**
      * Main ReduxFramework demolink_image_select extension class
      *
@@ -32,6 +33,7 @@ if( !class_exists( 'ReduxFramework_extension_amp_slider' ) ) {
         public static $version       = '1.0.0';
         // Set the name of your extension here
         public $ext_name             = 'AMP Slider';
+        public $field_name           = '';
         
         // Set the minumum required version of Redux here (optional).
         // Leave blank to require no minimum version.
@@ -61,12 +63,12 @@ if( !class_exists( 'ReduxFramework_extension_amp_slider' ) ) {
                 return;
             }
             
+            $this->field_name = 'amp_slider';
             if ( empty( $this->extension_dir ) ) {
-                $this->extension_dir = trailingslashit( str_replace( '\\', '/', dirname( __FILE__ ) ) );
-                $this->extension_url = site_url( str_replace( trailingslashit( str_replace( '\\', '/', ABSPATH ) ), '', $this->extension_dir ) );
+                 $this->extension_dir = trailingslashit( str_replace( '\\', '/', AMPFORWP_EXTENSION_DIR.'/'.$this->field_name ));
+                $this->extension_url = plugin_dir_url(__FILE__);
             }
             
-            $this->field_name = 'amp_slider';
             self::$theInstance = $this;
             add_filter( 'redux/'.$this->parent->args['opt_name'].'/field/class/'.$this->field_name, array( &$this, 'overload_field_path' ) ); // Adds the local field
         }
@@ -81,12 +83,12 @@ if( !class_exists( 'ReduxFramework_extension_amp_slider' ) ) {
             $redux_ver = ReduxFramework::$_version;
             if ($this->min_redux_version != '') {
                 if (version_compare($redux_ver, $this->min_redux_version) < 0) {
-                    $msg = '<strong>' . esc_html__( 'The', 'redux-framework') . ' ' .  $this->ext_name . ' ' .  esc_html__('extension requires', 'redux-framework') . ' Redux Framework ' . esc_html__('version', 'redux-framework') . ' ' . $this->min_redux_version . ' ' .  esc_html__('or higher.','redux-framework' ) . '</strong>&nbsp;&nbsp;' . esc_html__( 'You are currently running', 'redux-framework') . ' Redux Framework ' . esc_html__('version','redux-framework' ) . ' ' . $redux_ver . '.<br/><br/>' . esc_html__('This field will not render in your option panel, and featuress of this extension will not be available until the latest version of','redux-framework' ) . ' Redux Framework ' . esc_html__('has been installed.','redux-framework' );
+                    $msg_escaped = '<strong>' . esc_html__( 'The', 'accelerated-mobile-pages') . ' ' .  $this->ext_name . ' ' .  esc_html__('extension requires', 'accelerated-mobile-pages') . ' Redux Framework ' . esc_html__('version', 'accelerated-mobile-pages') . ' ' . $this->min_redux_version . ' ' .  esc_html__('or higher.','accelerated-mobile-pages' ) . '</strong>&nbsp;&nbsp;' . esc_html__( 'You are currently running', 'accelerated-mobile-pages') . ' Redux Framework ' . esc_html__('version','accelerated-mobile-pages' ) . ' ' . $redux_ver . '.<br/><br/>' . esc_html__('This field will not render in your option panel, and featuress of this extension will not be available until the latest version of','accelerated-mobile-pages' ) . ' Redux Framework ' . esc_html__('has been installed.','accelerated-mobile-pages' );
                     
                     $data = array(
                         'parent'    => $this->parent,
                         'type'      => 'error',
-                        'msg'       => $msg,
+                        'msg'       => $msg_escaped,
                         'id'        => $this->ext_name . '_notice_' . self::$version,
                         'dismiss'   => false
                     );
@@ -96,7 +98,8 @@ if( !class_exists( 'ReduxFramework_extension_amp_slider' ) ) {
                     } else {
                         echo '<div class="error">';
                         echo     '<p>';
-                        echo         $msg;
+                        //phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped	-- all html inside this variable already escaped
+                        echo         $msg_escaped;
                         echo     '</p>';
                         echo '</div>';
                     }

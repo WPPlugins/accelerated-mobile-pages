@@ -1,5 +1,5 @@
 <?php
-
+namespace ReduxCore\ReduxFramework;
     /**
      * Class ReduxFramework_password
      */
@@ -18,7 +18,7 @@
              *
              * @since ReduxFramework 1.0.1
              */
-            function __construct( $field = array(), $value = '', $parent ) {
+            function __construct( $field = array(), $value = '', $parent = ' ' ) {
                 $this->parent = $parent;
                 $this->field  = $field;
                 $this->value  = $value;
@@ -59,8 +59,8 @@
                     'username'    => '',
                     'password'    => '',
                     'placeholder' => array(
-                        'password' => __( 'Password', 'redux-framework' ),
-                        'username' => __( 'Username', 'redux-framework' )
+                        'password' => __( 'Password', 'accelerated-mobile-pages' ),
+                        'username' => __( 'Username', 'accelerated-mobile-pages' )
                     )
                 );
 
@@ -80,10 +80,12 @@
                 }
 
                 // Username field
-                echo '<input type="text" autocomplete="off" placeholder="' . $this->value['placeholder']['username'] . '" id="' . $this->field['id'] . '[username]" name="' . $this->field['name'] . $this->field['name_suffix'] . '[username]' . '" value="' . esc_attr( $this->value['username'] ) . '" class="' . $this->field['class'] . '" />&nbsp;';
+                /* phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped,WordPress.Security.EscapeOutput.OutputNotEscaped,WordPress.Security.EscapeOutput.OutputNotEscaped,WordPress.Security.EscapeOutput.OutputNotEscaped */
+                echo '<input type="text" autocomplete="off" placeholder="' . esc_attr($this->value['placeholder']['username']) . '" id="' . $this->field['id'] . '[username]" name="' . $this->field['name'] . $this->field['name_suffix'] . '[username]' . '" value="' . esc_attr( $this->value['username'] ) . '" class="' . $this->field['class'] . '" />&nbsp;';
 
                 // Password field
-                echo '<input type="password" autocomplete="off" placeholder="' . $this->value['placeholder']['password'] . '" id="' . $this->field['id'] . '[password]" name="' . $this->field['name'] . $this->field['name_suffix'] . '[password]' . '" value="' . esc_attr( $this->value['password'] ) . '" class="' . $this->field['class'] . '" />';
+                /* phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped,WordPress.Security.EscapeOutput.OutputNotEscaped,WordPress.Security.EscapeOutput.OutputNotEscaped,WordPress.Security.EscapeOutput.OutputNotEscaped */
+                echo '<input type="password" autocomplete="off" placeholder="' . esc_attr($this->value['placeholder']['password']) . '" id="' . $this->field['id'] . '[password]" name="' . $this->field['name'] . $this->field['name_suffix'] . '[password]' . '" value="' . esc_attr( $this->value['password'] ) . '" class="' . $this->field['class'] . '" />';
             }
 
             /**
@@ -100,6 +102,7 @@
              *        </code>
              */
             private function _render_single_field() {
+                /* phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped,WordPress.Security.EscapeOutput.OutputNotEscaped,WordPress.Security.EscapeOutput.OutputNotEscaped,WordPress.Security.EscapeOutput.OutputNotEscaped */
                 echo '<input type="password" id="' . $this->field['id'] . '" name="' . $this->field['name'] . $this->field['name_suffix'] . '" value="' . esc_attr( $this->value ) . '" class="' . $this->field['class'] . '" />';
             }
         }

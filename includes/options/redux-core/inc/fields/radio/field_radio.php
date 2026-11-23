@@ -1,5 +1,5 @@
 <?php
-
+namespace ReduxCore\ReduxFramework;
 // Exit if accessed directly
     if ( ! defined( 'ABSPATH' ) ) {
         exit;
@@ -14,7 +14,7 @@
              *
              * @since ReduxFramework 1.0.0
              */
-            function __construct( $field = array(), $value = '', $parent ) {
+            function __construct( $field = array(), $value = '', $parent = ' ' ) {
                 $this->parent = $parent;
                 $this->field  = $field;
                 $this->value  = $value;
@@ -38,12 +38,16 @@
                 $this->field['data_class'] = ( isset( $this->field['multi_layout'] ) ) ? 'data-' . $this->field['multi_layout'] : 'data-full';
 
                 if ( ! empty( $this->field['options'] ) ) {
+                    /* phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped */
                     echo '<ul class="' . $this->field['data_class'] . '">';
 
                     foreach ( $this->field['options'] as $k => $v ) {
                         echo '<li>';
+                        /* phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped,WordPress.Security.EscapeOutput.OutputNotEscaped */
                         echo '<label for="' . $this->field['id'] . '_' . array_search( $k, array_keys( $this->field['options'] ) ) . '">';
+                        /* phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped,WordPress.Security.EscapeOutput.OutputNotEscaped,WordPress.Security.EscapeOutput.OutputNotEscaped,WordPress.Security.EscapeOutput.OutputNotEscaped,WordPress.Security.EscapeOutput.OutputNotEscaped,WordPress.Security.EscapeOutput.OutputNotEscaped */
                         echo '<input type="radio" class="radio ' . $this->field['class'] . '" id="' . $this->field['id'] . '_' . array_search( $k, array_keys( $this->field['options'] ) ) . '" name="' . $this->field['name'] . $this->field['name_suffix'] . '" value="' . $k . '" ' . checked( $this->value, $k, false ) . '/>';
+                         /* phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped */
                         echo ' <span>' . $v . '</span>';
                         echo '</label>';
                         echo '</li>';

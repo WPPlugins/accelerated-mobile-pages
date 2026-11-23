@@ -1,4 +1,8 @@
 <?php
+// Exit if accessed directly
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
 include_once( ABSPATH . 'wp-admin/includes/plugin.php' );
  
 // check for plugin using plugin name
@@ -6,31 +10,18 @@ $old_plugin = AMPFORWP_MAIN_PLUGIN_DIR.'amp-category-base-remover/amp-category-b
 if ( is_plugin_active( $old_plugin ) ) {
     //plugin is activated
 	deactivate_plugins($old_plugin);
-	add_action( 'admin_notices', 'plugin_catagory_base_removed_admin_notice__success' );
+	add_action( 'admin_notices', 'ampforwp_catagory_base_removal_admin_notice' );
 } 
 
-function plugin_catagory_base_removed_admin_notice__success(){
+function ampforwp_catagory_base_removal_admin_notice(){
 	?>
 	<div class="notice notice-success is-dismissible">
-        <p><?php esc_html_e( 'AMP Category Base URL Remover plugin has De-activated, <br> Category removal option is added in our core plugin <a href="#">Click here to view details</a>', 'amp-for-plugin' ); ?></p>
+        <p><?php
+		/* translators: %s: # */
+		sprintf( __( 'AMP Category Base URL Remover plugin has De-activated, <br> Category removal option is added in our core plugin <a href=%s>Click here to view details</a>', 'accelerated-mobile-pages' ), "#" ); ?></p>
     </div>
 	<?php
 }
-
-
- add_action( 'current_screen', 'this_screen_own' );
- function this_screen_own(){
-	$current_screen = get_current_screen(); 
-	 if( $current_screen->id === "plugin-install" ) {
-		
-		function amp_enqueue_function_dependancies() {
-			wp_enqueue_script( 'AMPScriptDependanciesremove', plugins_url('dependencyScript.js', __FILE__), array( 'jquery' ) );
-		}
-		add_action( 'admin_enqueue_scripts', 'amp_enqueue_function_dependancies' );
-	}
- }
- 
- 
  
 add_filter( 'init', 'ampforwp_url_base_rewrite_rules', 100 );
 function ampforwp_url_base_rewrite_rules(){
@@ -45,11 +36,6 @@ function ampforwp_url_base_rewrite_rules(){
 	if( isset($redux_builder_amp['ampforwp-tag-base-removal-link']) ) {
 		$tagBaseRewrite = $redux_builder_amp['ampforwp-tag-base-removal-link'];
 	}
-	/* $catagoryStatusChanges = get_option('AMP-category-base-removal-status');
-	if($catagoryStatusChanges==$categoryBaseRewrite){
-		update_option('AMP-category-base-removal-status',$categoryBaseRewrite);
-		$wp_rerite->flush_rules( $hard );
-	} */
 	if($categoryBaseRewrite === '1'){
 		add_action( 'created_category', 'amp_flush_rewrite_rules', 999 );
 		add_action( 'edited_category', 'amp_flush_rewrite_rules', 999 );
@@ -66,11 +52,18 @@ function ampforwp_url_base_rewrite_rules(){
 		add_action( 'created_post_tag', 'amp_flush_rewrite_rules' , 999 );
 		add_action( 'edited_post_tag', 'amp_flush_rewrite_rules', 999 );
 		add_action( 'delete_post_tag', 'amp_flush_rewrite_rules', 999 );
-		add_filter( 'tag_rewrite_rules', 'ampforwp_tag_url_rewrite_rules' );
+		add_filter( 'post_tag_rewrite_rules', 'ampforwp_tag_url_rewrite_rules' );
+		if(class_exists('kallookoo\wp_no_base_permalink\Plugin')){
+			$options = get_option( 'wp_no_base_permalink' );
+			if(isset($options['disabled-tag-base']) && $options['disabled-tag-base'] == 1){
+				add_filter( 'tag_rewrite_rules', 'ampforwp_tag_url_rewrite_rules' );
+			}
+		}
 	}elseif( $tagBaseRewrite === '0' ) {
 		remove_action( 'created_post_tag', 'amp_flush_rewrite_rules' , 999 );
 		remove_action( 'edited_post_tag', 'amp_flush_rewrite_rules', 999 );
 		remove_action( 'delete_post_tag', 'amp_flush_rewrite_rules', 999 );
+		remove_filter( 'post_tag_rewrite_rules', 'ampforwp_tag_url_rewrite_rules' ); 
 		remove_filter( 'tag_rewrite_rules', 'ampforwp_tag_url_rewrite_rules' ); 
 	} 
 }
@@ -114,13 +107,18 @@ function ampforwp_category_url_rewrite_rules( $rewrite ) {
 
  
 function ampforwp_tag_url_rewrite_rules( $rewrite ) {
-	$terms = get_terms( 'post_tag', array( 'hide_empty' => false ) );
-	foreach ( $terms as $term ) {
-		$term_nicename = trim($term->slug);
-		
-		$rewrite[ '('.$term_nicename.')'.'/amp/?$' ] = 'index.php?amp&tag=$matches[1]';
-		$rewrite[ '('.$term_nicename.')'.'/amp/page/?([0-9]{1,})/?$' ] = 
-		  'index.php?amp&tag=$matches[1]&paged=$matches[2]'; 
+
+	$tags = get_terms( array( 'taxonomy'   => 'post_tag', 'hide_empty' => false ) );
+
+	if ( is_array( $tags ) && ! empty( $tags ) ) {
+
+	 	foreach ( $tags as $tag ) {
+
+	 		$tag_nicename = trim( $tag->slug );
+	 		$rewrite[ '('.$tag_nicename.')'.'/amp/?$' ] = 'index.php?amp&tag=$matches[1]';
+	 		$rewrite[ '('.$tag_nicename.')'.'/amp/page/?([0-9]{1,})/?$' ] = 'index.php?amp&tag=$matches[1]&paged=$matches[2]'; 
+
+		}
 	}
 	
 	return $rewrite;

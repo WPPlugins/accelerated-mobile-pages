@@ -1,6 +1,9 @@
 <?php
-
-require_once( AMP__DIR__ . '/includes/sanitizers/class-amp-base-sanitizer.php' );
+namespace AMPforWP\AMPVendor;
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+require_once( AMP__VENDOR__DIR__ . '/includes/sanitizers/class-amp-base-sanitizer.php' );
 
 /**
  * Strips blacklisted tags and attributes from content.
@@ -19,6 +22,10 @@ class AMP_Blacklist_Sanitizer extends AMP_Base_Sanitizer {
 
 	public function sanitize() {
 		$blacklisted_tags = $this->get_blacklisted_tags();
+		// Blacklisted tags for non-content #2835
+		if ( isset($this->args['non-content']) && 'non-content' === $this->args['non-content'] ) {
+			$blacklisted_tags = ampforwp_sidebar_blacklist_tags($blacklisted_tags);
+		}
 		$blacklisted_attributes = $this->get_blacklisted_attributes();
 		$blacklisted_protocols = $this->get_blacklisted_protocols();
 
@@ -34,9 +41,25 @@ class AMP_Blacklist_Sanitizer extends AMP_Base_Sanitizer {
 
 		$node_name = $node->nodeName;
 
-		if($node->nodeName=='a' ){
+		if($node->nodeName=='a' && $node->hasAttribute('href')){
 			$href = $node->getAttribute('href');
-			$node->setAttribute('href',ampforwp_findInternalUrl($href));
+			if( strpos($href,'tel:') ){
+				$disallowed = array('http://', 'https://');
+				foreach($disallowed as $d){
+			      if(strpos($href, $d) === 0) {
+			         $href = str_replace($d, '', $href);
+			      }
+			   }
+			   $node->setAttribute('href',$href);
+			}
+			if( function_exists('googlesitekit_activate_plugin') ){	
+                if(strpos($href,'#') !== 0){
+			    $node->setAttribute('href', \ampforwp_findInternalUrl($href));
+			    }
+		    }else{
+			  $node->setAttribute('href', \ampforwp_findInternalUrl($href));
+		    }   
+
 		}
 		
 		// Some nodes may contain valid content but are themselves invalid.
@@ -53,7 +76,10 @@ class AMP_Blacklist_Sanitizer extends AMP_Base_Sanitizer {
 			$length = $node->attributes->length;
 			for ( $i = $length - 1; $i >= 0; $i-- ) {
 				$attribute = $node->attributes->item( $i );
-				$attribute_name = strtolower( $attribute->name );
+				$attribute_name = '';
+				if (isset($attribute->name)) {
+					$attribute_name = strtolower( $attribute->name );
+				}
 				if ( in_array( $attribute_name, $bad_attributes, true ) ) {
 					$node->removeAttribute( $attribute_name );
 					continue;
@@ -88,6 +114,7 @@ class AMP_Blacklist_Sanitizer extends AMP_Base_Sanitizer {
 
 			for ( $i = $length - 1; $i >= 0; $i-- ) {
 				$element = $elements->item( $i );
+				if( is_null( $element ) ) continue; //Null check added.
 				// Allow script with application/ld+json #1958
 				if ( $element->hasAttributes() ) {
 					$attr = $element->getAttribute('type');
@@ -97,9 +124,43 @@ class AMP_Blacklist_Sanitizer extends AMP_Base_Sanitizer {
 					}
 				}
 				$parent_node = $element->parentNode;
-				$parent_node->removeChild( $element );
+				$spec_name = 'amp-script extension local script';
+				$checkAllowedFlag = 0 ;
+				foreach ( AMP_Allowed_Tags_Generated::get_allowed_tag( 'script' ) as $spec_rule ) {
+					if ( isset( $spec_rule[ AMP_Rule_Spec::TAG_SPEC ]['spec_name'] ) && $spec_name === $spec_rule[ AMP_Rule_Spec::TAG_SPEC ]['spec_name'] ) {
+						if($element->getAttribute( 'id' ) && $element->getAttribute( 'target' ) == 'amp-script')
+							$checkAllowedFlag = 1 ;
+					}
+				}
 
-				if ( 'body' !== $parent_node->nodeName && AMP_DOM_Utils::is_node_empty( $parent_node ) ) {
+				//white listing form element #4010
+				$form_classes = '';
+				$form_method = '';
+				if($element->tagName=='form'){
+					$form_classes 	= $element->getAttribute('class');
+					$form_method 	= $element->getAttribute('method');
+				}else if($parent_node->tagName=='form'){
+					$form_classes	= $parent_node->getAttribute('class');
+					$form_method 	= $parent_node->getAttribute('method');
+				}
+				$allow_form = 0;
+				$allow_form = apply_filters('ampforwp_whitelist_form_element',$allow_form,$element);
+				if((strpos($form_classes, 'ampforwp-form-allow') !== false || $allow_form==1) && strtolower($form_method)=='post'){
+					$checkAllowedFlag = 1;
+				}
+				
+				if($form_method!=''){
+					if(strtolower($form_method)=='get'){
+						$checkAllowedFlag = 1;
+					}
+				}
+				//white listing form element close #4010
+
+
+				if( $parent_node->tagName != 'amp-state' && $checkAllowedFlag == 0){
+ 					$parent_node->removeChild( $element );
+				}
+ 				if ( 'body' !== $parent_node->nodeName && AMP_DOM_Utils::is_node_empty( $parent_node ) ) {
 					$parent_node->parentNode->removeChild( $parent_node );
 				}
 			}
@@ -107,8 +168,10 @@ class AMP_Blacklist_Sanitizer extends AMP_Base_Sanitizer {
 	}
 
 	private function sanitize_a_attribute( $node, $attribute ) {
-		$attribute_name = strtolower( $attribute->name );
-
+		$attribute_name = '';
+		if (isset($attribute->name)) {
+			$attribute_name = strtolower( $attribute->name );
+		}
 		if ( 'rel' === $attribute_name ) {
 			$old_value = $attribute->value;
 			$new_value = trim( preg_replace( self::PATTERN_REL_WP_ATTACHMENT, '', $old_value ) );
@@ -141,7 +204,10 @@ class AMP_Blacklist_Sanitizer extends AMP_Base_Sanitizer {
 		// If no href is set and this isn't an anchor, it's invalid
 		if ( empty( $href ) ) {
 			$name_attr = $node->getAttribute( 'name' );
-			if ( ! empty( $name_attr ) ) {
+			$id_attr = $node->getAttribute( 'id' );
+			$class = $node->getAttribute( 'class' );
+			$on = $node->getAttribute( 'on' );
+			if ( ! empty( $name_attr ) || ! empty( $id_attr ) || ! empty( $class ) || ! empty( $on ) ) {
 				// No further validation is required
 				return true;
 			} else {
@@ -159,13 +225,23 @@ class AMP_Blacklist_Sanitizer extends AMP_Base_Sanitizer {
 			$href = untrailingslashit( get_home_url() ) . $href;
 		}
 
-		$valid_protocols = array( 'http', 'https', 'mailto', 'sms', 'tel', 'viber', 'whatsapp' );
-		$special_protocols = array( 'tel', 'sms' ); // these ones don't valid with `filter_var+FILTER_VALIDATE_URL`
+		$valid_protocols = array( 'http', 'https', 'mailto', 'sms', 'tel', 'viber', 'whatsapp' , 'ftp','skype', 'tg' , 'Tel');
+		$special_protocols = array( 'tel', 'sms','skype' ); // these ones don't valid with `filter_var+FILTER_VALIDATE_URL`
 		$protocol = strtok( $href, ':' );
 
-		if ( false === filter_var( $href, FILTER_VALIDATE_URL )
-			&& ! in_array( $protocol, $special_protocols, true ) ) {
-			return false;
+		/* Convert space into %20 and esc url so it can work with the correct 
+		urls that have spaces */
+		if ( strpos($href, ' ') ){
+			$href = esc_url($href);
+		}
+		/*	Issue was with multibyte string.
+		 *  For more info check: https://github.com/ahmedkaludi/accelerated-mobile-pages/issues/2556 and https://github.com/ahmedkaludi/accelerated-mobile-pages/issues/2967
+		*/
+		if( false === $this->contains_any_multibyte($href) ){
+			if ( false === parse_url( $href,PHP_URL_HOST )
+				&& ! in_array( $protocol, $special_protocols, true ) ) {
+				return false;
+			}
 		}
 
 		if ( ! in_array( $protocol, $valid_protocols, true ) ) {
@@ -207,7 +283,14 @@ class AMP_Blacklist_Sanitizer extends AMP_Base_Sanitizer {
 			'javascript',
 		) );
 	}
-
+	private	function contains_any_multibyte($string){
+    	if(function_exists('mb_check_encoding')){
+    		return !\mb_check_encoding($string, 'ASCII') && \mb_check_encoding($string, 'UTF-8');
+    	}
+    	else{
+    		return false;
+    	}
+	}
 	private function get_blacklisted_tags() {
 		return $this->merge_defaults_with_args( 'add_blacklisted_tags', apply_filters('amp_blacklisted_tags' , array(
 			'script',
@@ -219,13 +302,10 @@ class AMP_Blacklist_Sanitizer extends AMP_Base_Sanitizer {
 			'param',
 			'applet',
 			'form',
-			'label',
-			'input',
 			'textarea',
 			'select',
 			'option',
 			'link',
-			'picture',
 			'canvas',
 
 			// Sanitizers run after embed handlers, so if anything wasn't matched, it needs to be removed.

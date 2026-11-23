@@ -1,5 +1,5 @@
 <?php
-
+namespace ReduxCore\ReduxFramework;
 /**
  * Redux Framework is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,6 +34,11 @@ if ( ! class_exists( 'ReduxFramework_multi_text' ) ) {
      */
     class ReduxFramework_multi_text {
 
+        public $parent;
+        public $field;
+        public $value;
+        public $add_text;
+        public $show_empty;
         /**
          * Field Constructor.
          * Required - must call the parent constructor, then assign field and value to vars, and obviously call the render field function
@@ -42,10 +47,11 @@ if ( ! class_exists( 'ReduxFramework_multi_text' ) ) {
          * @access      public
          * @return      void
          */
-        function __construct( $field = array(), $value = '', $parent ) {
+        function __construct( $field = array(), $value = '', $parent = ' ' ) {
             $this->parent = $parent;
             $this->field  = $field;
             $this->value  = $value;
+
         }
 
         /**
@@ -58,26 +64,29 @@ if ( ! class_exists( 'ReduxFramework_multi_text' ) ) {
          */
         public function render() {
 
-            $this->add_text   = ( isset( $this->field['add_text'] ) ) ? $this->field['add_text'] : __( 'Add More', 'redux-framework' );
+            $this->add_text   = ( isset( $this->field['add_text'] ) ) ? $this->field['add_text'] : __( 'Add More', 'accelerated-mobile-pages' );
             $this->show_empty = ( isset( $this->field['show_empty'] ) ) ? $this->field['show_empty'] : true;
-
+/* phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped */
             echo '<ul id="' . $this->field['id'] . '-ul" class="redux-multi-text">';
 
             if ( isset( $this->value ) && is_array( $this->value ) ) {
                 foreach ( $this->value as $k => $value ) {
                     if ( $value != '' ) {
-                        echo '<li><input type="text" id="' . $this->field['id'] . '-' . $k . '" name="' . $this->field['name'] . $this->field['name_suffix'] . '[]' . '" value="' . esc_attr( $value ) . '" class="regular-text ' . $this->field['class'] . '" /> <a href="javascript:void(0);" class="deletion redux-multi-text-remove">' . __( 'Remove', 'redux-framework' ) . '</a></li>';
+                        /* phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped,WordPress.Security.EscapeOutput.OutputNotEscaped,WordPress.Security.EscapeOutput.OutputNotEscaped,WordPress.Security.EscapeOutput.OutputNotEscaped,WordPress.Security.EscapeOutput.OutputNotEscaped,WordPress.Security.EscapeOutput.OutputNotEscaped */
+                        echo '<li><input type="text" id="' . $this->field['id'] . '-' . $k . '" name="' . $this->field['name'] . $this->field['name_suffix'] . '[]' . '" value="' . esc_attr( $value ) . '" class="regular-text ' . $this->field['class'] . '" /> <a href="javascript:void(0);" class="deletion redux-multi-text-remove">' . __( 'Remove', 'accelerated-mobile-pages' ) . '</a></li>';
                     }
                 }
             } elseif ( $this->show_empty == true ) {
-                echo '<li><input type="text" id="' . $this->field['id'] . '" name="' . $this->field['name'] . $this->field['name_suffix'] . '[]' . '" value="" class="regular-text ' . $this->field['class'] . '" /> <a href="javascript:void(0);" class="deletion redux-multi-text-remove">' . __( 'Remove', 'redux-framework' ) . '</a></li>';
+                 /* phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped,WordPress.Security.EscapeOutput.OutputNotEscaped,WordPress.Security.EscapeOutput.OutputNotEscaped,WordPress.Security.EscapeOutput.OutputNotEscaped,WordPress.Security.EscapeOutput.OutputNotEscaped */
+                echo '<li><input type="text" id="' . $this->field['id'] . '" name="' . $this->field['name'] . $this->field['name_suffix'] . '[]' . '" value="" class="regular-text ' . $this->field['class'] . '" /> <a href="javascript:void(0);" class="deletion redux-multi-text-remove">' . __( 'Remove', 'accelerated-mobile-pages' ) . '</a></li>';
             }
-
-            echo '<li style="display:none;"><input type="text" id="' . $this->field['id'] . '" name="" value="" class="regular-text" /> <a href="javascript:void(0);" class="deletion redux-multi-text-remove">' . __( 'Remove', 'redux-framework' ) . '</a></li>';
+            /* phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped,WordPress.Security.EscapeOutput.OutputNotEscaped */
+            echo '<li style="display:none;"><input type="text" id="' . $this->field['id'] . '" name="" value="" class="regular-text" /> <a href="javascript:void(0);" class="deletion redux-multi-text-remove">' . __( 'Remove', 'accelerated-mobile-pages' ) . '</a></li>';
 
             echo '</ul>';
             echo '<span style="clear:both;display:block;height:0;" /></span>';
             $this->field['add_number'] = ( isset( $this->field['add_number'] ) && is_numeric( $this->field['add_number'] ) ) ? $this->field['add_number'] : 1;
+            /* phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped,WordPress.Security.EscapeOutput.OutputNotEscaped,WordPress.Security.EscapeOutput.OutputNotEscaped,WordPress.Security.EscapeOutput.OutputNotEscaped,WordPress.Security.EscapeOutput.OutputNotEscaped */
             echo '<a href="javascript:void(0);" class="button button-primary redux-multi-text-add" data-add_number="' . $this->field['add_number'] . '" data-id="' . $this->field['id'] . '-ul" data-name="' . $this->field['name'] . $this->field['name_suffix'] . '[]">' . $this->add_text . '</a><br/>';
         }
 

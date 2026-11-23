@@ -1,4 +1,15 @@
-<?php require_once AMP__DIR__ . '/includes/embeds/class-amp-base-embed-handler.php';
+<?php
+
+// Exit if accessed directly
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+use AMPforWP\AMPVendor\AMP_Base_Embed_Handler;
+use AMPforWP\AMPVendor\AMP_HTML_Utils;
+$file_path = AMP__VENDOR__DIR__ . '/includes/embeds/class-amp-base-embed-handler.php';
+if( file_exists($file_path) ){
+	require_once $file_path;
+}
 
 // Much of this class is borrowed from Jetpack embeds
 class AMPforWP_YouTube_Embed_Handler extends AMP_Base_Embed_Handler {
@@ -26,6 +37,7 @@ class AMPforWP_YouTube_Embed_Handler extends AMP_Base_Embed_Handler {
 	function register_embed() {
 		wp_embed_register_handler( 'amp-youtube', self::URL_PATTERN, array( $this, 'oembed' ), -1 );
 		add_shortcode( 'youtube', array( $this, 'shortcode' ) );
+		add_filter( 'wp_video_shortcode_override', array( $this, 'video_override') , 10, 2 );
 	}
 
 	public function unregister_embed() {
@@ -84,13 +96,19 @@ class AMPforWP_YouTube_Embed_Handler extends AMP_Base_Embed_Handler {
 				'width' => $this->args['width'],
 				'height' => $this->args['height'],
 				);
+		if(ampforwp_get_setting('ampforwp-amp-video-docking')==true){
+				$attrs['dock'] = '#dock-slot';
+		}
+		if(ampforwp_get_setting('ampforwp-amp-video-lightbox')==true){
+				$attrs['autoplay'] = true;
+		}
 		$attrs = ampforwp_amp_consent_check( $attrs );
 		return AMP_HTML_Utils::build_tag('amp-youtube',apply_filters('amp_youtube_params', $attrs) );
 	}
 
 	private function get_video_id_from_url( $url ) {
 		$video_id = false;
-		$parsed_url = parse_url( $url );
+		$parsed_url = wp_parse_url( $url );
 		if(!isset($parsed_url['host'])){
 			$parsed_url['host'] = '';
 		}
@@ -102,7 +120,9 @@ class AMPforWP_YouTube_Embed_Handler extends AMP_Base_Embed_Handler {
 			}
 		} else {
 			// ?v={id} or ?list={id}
-			parse_str( $parsed_url['query'], $query_args );
+			if(isset($parsed_url['query'])){
+			  parse_str( $parsed_url['query'], $query_args );
+		    }
 
 			if ( isset( $query_args['v'] ) ) {
 				$video_id = $this->sanitize_v_arg( $query_args['v'] );
@@ -128,5 +148,26 @@ class AMPforWP_YouTube_Embed_Handler extends AMP_Base_Embed_Handler {
 		}
 
 		return $value;
+	}
+	/**
+	 * Override the output of YouTube videos.
+	 *
+	 * This overrides the value in wp_video_shortcode().
+	 * The pattern matching is copied from WP_Widget_Media_Video::render().
+	 *
+	 * @param string $html Empty variable to be replaced with shortcode markup.
+	 * @param array  $attr The shortcode attributes.
+	 * @return string|null $markup The markup to output.
+	 */
+	public function video_override( $html, $attr ) {
+		if ( ! isset( $attr['src'] ) ) {
+			return $html;
+		}
+		$src             = $attr['src'];
+		$youtube_pattern = '#^https?://(?:www\.)?(?:youtube\.com/watch|youtu\.be/)#';
+		if ( 1 === preg_match( $youtube_pattern, $src ) ) {
+			return $this->shortcode( [ $src ] );
+		}
+		return $html;
 	}
 }

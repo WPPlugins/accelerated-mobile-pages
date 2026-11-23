@@ -1,80 +1,63 @@
-<?php global $redux_builder_amp; ?>
+<?php 
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+global $redux_builder_amp; ?>
 <?php do_action('ampforwp_before_content_hook',$this); ?>
 
 <div class="amp-wp-article-content">
+	<?php 
+	if ( 'above-content' ==  ampforwp_get_setting('design-1-2-3-addthis-pos') ){
+		ampforwp_addthis_support(); 
+	}	?>
 	<div class="amp-wp-content the_content">
-	<?php
-	do_action('ampforwp_inside_post_content_before',$this);
-		$amp_custom_content_enable = get_post_meta( $this->get( 'post_id' ) , 'ampforwp_custom_content_editor_checkbox', true);
-
-		// Normal Front Page Content
-		if ( ! $amp_custom_content_enable ) {
-			$ampforwp_the_content = $this->get( 'post_amp_content' ); // amphtml content; no kses
-		} else {
-			// Custom/Alternative AMP content added through post meta
-			$ampforwp_the_content = $this->get( 'ampforwp_amp_content' );
-		}
-		// Muffin Builder Compatibility #1455 #1893
-		if ( function_exists('mfn_builder_print') && !$amp_custom_content_enable) {
-			ob_start();
-		  	mfn_builder_print( get_the_ID() );
-			$content = ob_get_contents();
-			ob_end_clean();
-			$sanitizer_obj = new AMPFORWP_Content( $content,
-								array(), 
-								apply_filters( 'ampforwp_content_sanitizers', 
-									array( 'AMP_Img_Sanitizer' => array(), 
-										'AMP_Blacklist_Sanitizer' => array(),
-										'AMP_Style_Sanitizer' => array(), 
-										'AMP_Video_Sanitizer' => array(),
-				 						'AMP_Audio_Sanitizer' => array(),
-				 						'AMP_Iframe_Sanitizer' => array(
-											 'add_placeholder' => true,
-										 ),
-									) 
-								) 
-							);
-			$ampforwp_the_content =  $sanitizer_obj->get_amp_content();
-		}
-	    
-		//Filter to modify the Content
-		$ampforwp_the_content = apply_filters('ampforwp_modify_the_content', $ampforwp_the_content);
-	    echo $ampforwp_the_content;			
-		do_action('ampforwp_after_post_content',$this) ; ?>
+	<?php amp_content(); ?>
 	</div>
+	<?php do_action( 'ampforwp_after_the_post_content_wrp' ); ?>
+	<?php 
+	if ( 'below-content' ==  ampforwp_get_setting('design-1-2-3-addthis-pos') ){
+		ampforwp_addthis_support();
+	} ?>
 	<!--Post Next-Previous Links-->
 	<?php
-		if($redux_builder_amp['enable-single-next-prev'] && !is_page() ) { ?>
+		if(true == ampforwp_get_setting('enable-single-next-prev') && !is_page() && !checkAMPforPageBuilderStatus(ampforwp_get_the_ID())) { ?>
 			<!--IF Starts here-->
 			<div class="amp-wp-content post-pagination-meta">
 				<div id="pagination">
-
-					<!--Next Link code-->
-					<div class="next">
-						<?php $next_post = get_next_post();
-							if (!empty( $next_post )) {
-								$next_text = $next_post->post_title;
-								?>
-									<a href="<?php echo ampforwp_url_controller( get_permalink( $next_post->ID ) ); ?>"><?php echo apply_filters('ampforwp_next_link',$next_text ); ?> &raquo;</a> <?php
+					<?php $next_post = get_next_post();
+					if (!empty( $next_post )) { 
+						if(false == ampforwp_get_setting('single-next-prev-to-nonamp')){ ?>
+						<div class="next">
+							<?php $next_text = $next_post->post_title;
+								$next_link = ampforwp_url_controller( get_permalink( $next_post->ID ));
+								if(true == ampforwp_get_setting('single-next-prev-to-nonamp')){
+								$next_link = get_permalink( $next_post->ID );
 								} ?>
-					</div>
-					<!--Next Link code-->
-
-					<!--Prev Link code-->
-					<div class="prev">
-							<?php $prev_post = get_previous_post();
-								 if (!empty( $prev_post )) {
-									 $prev_text = $prev_post->post_title;
-									  ?>
-								   <a href="<?php echo ampforwp_url_controller( get_permalink( $prev_post->ID ) ); ?>"> &laquo; <?php echo apply_filters('ampforwp_prev_link',$prev_text ); ?></a> <?php
-								 } ?>
-					</div>
-					<!--Prev Link code-->
-
-					<!--Clearfix code-->
-					<div class="clearfix"></div>
-					<!--Clearfix code-->
-
+								<a href="<?php echo esc_url($next_link); ?>">
+									<?php 
+									//phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+									echo apply_filters('ampforwp_next_link',$next_text ); ?> &raquo;</a> <?php
+									 } ?>		
+						</div>
+					<?php } 
+					
+					$prev_post = get_previous_post();
+					if (!empty( $prev_post )) { ?>
+						<div class="prev">
+							<?php $prev_text = $prev_post->post_title;
+							 	$prev_link = ampforwp_url_controller( get_permalink( $prev_post->ID ));
+								if(true == ampforwp_get_setting('single-next-prev-to-nonamp')){
+								$prev_link = get_permalink( $prev_post->ID );
+								} ?>
+								   <a href="<?php echo esc_url($prev_link); ?>"> &laquo; <?php 
+								   //phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+								   echo apply_filters('ampforwp_prev_link',$prev_text ); 
+								   ?>
+								   </a> 
+								<?php } ?>
+	
+						</div> 
+					<div class="cb"></div>
 				</div>
 			</div>
 			<!--IF Ends here-->

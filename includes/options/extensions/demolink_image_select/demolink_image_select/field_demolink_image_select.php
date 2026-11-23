@@ -1,5 +1,5 @@
 <?php
-
+namespace ReduxCore\ReduxFramework;
 /**
  * Field Select Image
  *
@@ -14,16 +14,24 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-if ( ! class_exists( 'ReduxFramework_demolink_image_select' ) ) {
+if ( ! class_exists( 'ReduxCore\\ReduxFramework\\ReduxFramework_demolink_image_select' ) ) {
     class ReduxFramework_demolink_image_select {
 
+        public $parent;
+        public $field;
+        public $value;
+        public $extension_dir;
+        public $extension_url;
+        public $time;
+        
+        
         /**
          * Field Constructor.
          * Required - must call the parent constructor, then assign field and value to vars, and obviously call the render field function
          *
          * @since ReduxFramework 1.0.0
          */
-        function __construct( $field = array(), $value = '', $parent ) {
+        function __construct( $field = array(), $value = '', $parent = ' ' ) {
             $this->parent = $parent;
             $this->field  = $field;
             $this->value  = $value;
@@ -32,8 +40,8 @@ if ( ! class_exists( 'ReduxFramework_demolink_image_select' ) ) {
                 $this->time = AMPFORWP_VERSION;
             }
             if ( empty( $this->extension_dir ) ) {
-            $this->extension_dir = trailingslashit( str_replace( '\\', '/', dirname( __FILE__ ) ) );
-            $this->extension_url = site_url( str_replace( trailingslashit( str_replace( '\\', '/', ABSPATH ) ), '', $this->extension_dir ) );
+            $this->extension_dir = trailingslashit( str_replace( '\\', '/', AMPFORWP_EXTENSION_DIR.'/demolink_image_select/demolink_image_select' ) );
+            $this->extension_url = plugin_dir_url(__FILE__);
             }    
             // Set default args for this field to avoid bad indexes. Change this to anything you use.
             $defaults = array(
@@ -77,17 +85,17 @@ if ( ! class_exists( 'ReduxFramework_demolink_image_select' ) ) {
                 }
 
                 // Process placeholder
-                $placeholder = ( isset( $this->field['placeholder'] ) ) ? esc_attr( $this->field['placeholder'] ) : __( 'Select an item', 'redux-framework' );
+                $placeholder = ( isset( $this->field['placeholder'] ) ) ? esc_attr( $this->field['placeholder'] ) : __( 'Select an item', 'accelerated-mobile-pages' );
 
                 if ( isset( $this->field['select2'] ) ) { // if there are any let's pass them to js
-                    $select2_params = json_encode( $this->field['select2'] );
+                    $select2_params = wp_json_encode( $this->field['select2'] );
                     $select2_params = htmlspecialchars( $select2_params, ENT_QUOTES );
 
-                    echo '<input type="hidden" class="select2_params" value="' . $select2_params . '">';
+                    echo '<input type="hidden" class="select2_params" value="' . esc_attr($select2_params) . '">';
                 }                    
 
                 // Begin the <select> tag
-                echo '<select data-id="' . $this->field['id'] . '" data-placeholder="' . $placeholder . '" name="' . $this->field['name'] . $this->field['name_suffix'] . '" class="redux-select-item redux-select-images ' . $this->field['class'] . '"' . $width . ' rows="6">';
+                echo '<select data-id="' . esc_attr($this->field['id']) . '" data-placeholder="' . esc_attr($placeholder) . '" name="' . esc_attr($this->field['name']) . esc_attr($this->field['name_suffix']) . '" class="redux-select-item redux-select-images ' . esc_attr($this->field['class']) . '"' . esc_attr($width) . ' rows="6">';
                 echo '<option></option>';
 
 
@@ -101,7 +109,7 @@ if ( ! class_exists( 'ReduxFramework_demolink_image_select' ) ) {
 						// variable to use later on when we want to extract its associted
 						// url.
 						if ( '' != $selected ) {
-							$arrNum = $x;
+							$arrNum = $k;
 						}
 						// No alt?  Set it to title.  We do this so the alt tag shows
 						// something.  It also makes HTML/SEO purists happy.
@@ -112,6 +120,7 @@ if ( ! class_exists( 'ReduxFramework_demolink_image_select' ) ) {
                             $v['demo_link'] = '';
                         }
 						// Add the option tag, with values.
+                        //phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 						echo '<option value="' . $v['value'] . '" ' . $selected . ' data-image="'. $v['img'].'" data-alt="'. $v['alt'] .'" data-demolink="'. $v['demo_link'] .'">' . $v['title'] . '</option>';
 					}else{
 						// No array?  No problem!
@@ -138,11 +147,12 @@ if ( ! class_exists( 'ReduxFramework_demolink_image_select' ) ) {
 						// variable to use later on when we want to extract its associted
 						// url.
 						if ( '' != $selected ) {
-							$arrNum = $x;
+							$arrNum = $k;
 						}
 
 						// Add the option tag, with values.
-						echo '<option value="' . $v['img'] . '" ' . $selected . '>' . $v['alt'] . '</option>';
+                        //phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+						echo '<option value="' . esc_url($v['img']) . '" ' . $selected . '>' . esc_html($v['alt']) . '</option>';
 					}
 					// Add a bean
                     $x ++;
@@ -168,15 +178,17 @@ if ( ! class_exists( 'ReduxFramework_demolink_image_select' ) ) {
                 // substract one from the saved array number.  We then pull the url
                 // out of the options array, and there we go.
                 if ( '' == $this->value ) {
-                    echo '<img src="#" class="redux-preview-image" style="visibility:hidden;" id="image_' . $this->field['id'] . '">';
+                    /* phpcs:ignore 	PluginCheck.CodeAnalysis.ImageFunctions.NonEnqueuedImage */
+                    echo '<img src="#" class="redux-preview-image" style="visibility:hidden;" id="image_' . esc_attr($this->field['id']) . '">';
                 } else {
                     $demo="#";
-                    if (isset($this->field['options'][ $arrNum - 1 ]['demo_link'])) {
-                        $demo = $this->field['options'][ $arrNum - 1 ]['demo_link'];
+                    if (isset($this->field['options'][ $arrNum  ]['demo_link'])) {
+                        $demo = $this->field['options'][ $arrNum ]['demo_link'];
                     }
-                    echo '<img src=' . $this->field['options'][ $arrNum - 1 ]['img'] . ' class="redux-preview-image" id="image_' . $this->field['id'] . '"  onclick="return window.open(\''.$demo.'\')">'; 
-                    if (isset($this->field['options'][ $arrNum - 1 ]['demo_link'])) {
-                        echo '<a href="'. $demo .'" id="theme-selected-demo-link" target="_blank">  
+                    /* phpcs:ignore 	PluginCheck.CodeAnalysis.ImageFunctions.NonEnqueuedImage */
+                    echo '<img src="' . esc_url($this->field['options'][ $arrNum ]['img']) . '" class="redux-preview-image" id="image_' . esc_attr($this->field['id']) . '"  onclick="return window.open(\''.esc_url($demo).'\')">'; 
+                    if (isset($this->field['options'][ $arrNum ]['demo_link'])) {
+                        echo '<a href="'. esc_url($demo) .'" id="theme-selected-demo-link" target="_blank">  
                                 Demo 
                             </a>';
                     }
@@ -187,7 +199,7 @@ if ( ! class_exists( 'ReduxFramework_demolink_image_select' ) ) {
             } else {
 
                 // No options specified.  Really?
-                echo '<strong>' . __( 'No items of this type were found.', 'redux-framework' ) . '</strong>';
+                echo '<strong>' . esc_html__( 'No items of this type were found.', 'accelerated-mobile-pages' ) . '</strong>';
             }
         } //function
 
@@ -217,7 +229,7 @@ if ( ! class_exists( 'ReduxFramework_demolink_image_select' ) ) {
 
             wp_enqueue_script(
                 'field-demolink-select-image-js',
-               $this->extension_url .'field_demolink_image_select.js',
+               esc_url($this->extension_url .'field_demolink_image_select.js'),
                 array('jquery', 'select2-js', 'redux-js'),
                 $this->time,
                 true
@@ -226,7 +238,7 @@ if ( ! class_exists( 'ReduxFramework_demolink_image_select' ) ) {
             if ($this->parent->args['dev_mode']) {
                 wp_enqueue_style(
                     'redux-field-select-image-css',
-                   $this->extension_url .'field_demolink_image_select.css',
+                   esc_url($this->extension_url .'field_demolink_image_select.css'),
                     array(),
                     $this->time,
                     'all'

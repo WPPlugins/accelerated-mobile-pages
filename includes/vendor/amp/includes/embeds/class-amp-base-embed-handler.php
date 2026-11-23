@@ -1,7 +1,10 @@
 <?php
-
+namespace AMPforWP\AMPVendor;
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
 // Used by some children
-require_once( AMP__DIR__ . '/includes/utils/class-amp-html-utils.php' );
+require_once( AMP__VENDOR__DIR__ . '/includes/utils/class-amp-html-utils.php' );
 
 abstract class AMP_Base_Embed_Handler {
 	protected $DEFAULT_WIDTH = 600;

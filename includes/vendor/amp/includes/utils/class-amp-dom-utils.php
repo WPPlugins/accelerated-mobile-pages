@@ -1,10 +1,15 @@
 <?php
+namespace AMPforWP\AMPVendor;
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
 /**
  * Class AMP_DOM_Utils
  *
  * Functionality to simplify working with DOMDocuments and DOMElements.
  */
 class AMP_DOM_Utils {
+
 	/**
 	 * HTML elements that are self-closing.
 	 *
@@ -34,6 +39,7 @@ class AMP_DOM_Utils {
 		'track',
 		'wbr',
 	);
+
 	/**
 	 * Stored noscript/comment replacements for libxml<2.8.
 	 *
@@ -41,6 +47,7 @@ class AMP_DOM_Utils {
 	 * @var array
 	 */
 	public static $noscript_placeholder_comments = array();
+
 	/**
 	 * Return a valid DOMDocument representing HTML document passed as a parameter.
 	 *
@@ -51,19 +58,23 @@ class AMP_DOM_Utils {
 	 * @return DOMDocument|false Returns DOMDocument, or false if conversion failed.
 	 */
 	public static function get_dom( $document ) {
-		$libxml_previous_state = libxml_use_internal_errors( true );
-		$dom = new DOMDocument();
+		$libxml_previous_state = \libxml_use_internal_errors( true );
+
+		$dom = new \DOMDocument();
+
 		// @todo In the future consider an AMP_DOMDocument subclass that does this automatically. See <https://github.com/Automattic/amp-wp/pull/895/files#r163825513>.
 		$document = self::convert_amp_bind_attributes( $document );
+
 		// Force all self-closing tags to have closing tags since DOMDocument isn't fully aware.
 		$document = preg_replace(
 			'#<(' . implode( '|', self::$self_closing_tags ) . ')[^>]*>(?!</\1>)#',
 			'$0</$1>',
 			$document
 		);
+
 		// Deal with bugs in older versions of libxml.
 		$added_back_compat_meta_content_type = false;
-		if ( version_compare( LIBXML_DOTTED_VERSION, '2.8', '<' ) ) {
+		if ( version_compare( \LIBXML_DOTTED_VERSION, '2.8', '<' ) ) {
 			/*
 			 * Replace noscript elements with placeholders since libxml<2.8 can parse them incorrectly.
 			 * When appearing in the head element, a noscript can cause the head to close prematurely
@@ -88,6 +99,7 @@ class AMP_DOM_Utils {
 				},
 				$document
 			);
+
 			/*
 			 * Add a pre-HTML5-style declaration of the encoding since libxml<2.8 doesn't recognize
 			 * HTML5's meta charset. See <https://bugzilla.gnome.org/show_bug.cgi?id=655218>.
@@ -103,6 +115,7 @@ class AMP_DOM_Utils {
 				$added_back_compat_meta_content_type = true;
 			}
 		}
+
 		/*
 		 * Wrap in dummy tags, since XML needs one parent node.
 		 * It also makes it easier to loop through nodes.
@@ -110,11 +123,14 @@ class AMP_DOM_Utils {
 		 * Add charset so loadHTML does not have problems parsing it.
 		 */
 		$result = $dom->loadHTML( $document );
-		libxml_clear_errors();
-		libxml_use_internal_errors( $libxml_previous_state );
+
+		\libxml_clear_errors();
+		\libxml_use_internal_errors( $libxml_previous_state );
+
 		if ( ! $result ) {
 			return false;
 		}
+
 		// Remove pre-HTML5-style encoding declaration if added above.
 		if ( $added_back_compat_meta_content_type ) {
 			$meta_http_equiv_element = $dom->getElementById( 'meta-http-equiv-content-type' );
@@ -122,8 +138,10 @@ class AMP_DOM_Utils {
 				$meta_http_equiv_element->parentNode->removeChild( $meta_http_equiv_element );
 			}
 		}
+
 		return $dom;
 	}
+
 	/**
 	 * Get attribute prefix for converted amp-bind attributes.
 	 *
@@ -144,6 +162,7 @@ class AMP_DOM_Utils {
 		}
 		return $attribute_prefix;
 	}
+
 	/**
 	 * Get amp-mustache tag/placeholder mappings.
 	 *
@@ -156,6 +175,7 @@ class AMP_DOM_Utils {
 		static $placeholders;
 		if ( ! isset( $placeholders ) ) {
 			$salt = wp_rand();
+
 			// Note: The order of these tokens is important, as it determines the order of the order of the replacements.
 			$tokens       = array(
 				'{{{',
@@ -174,6 +194,7 @@ class AMP_DOM_Utils {
 		}
 		return $placeholders;
 	}
+
 	/**
 	 * Replace AMP binding attributes with something that libxml can parse (as HTML5 data-* attributes).
 	 *
@@ -191,8 +212,10 @@ class AMP_DOM_Utils {
 	 */
 	public static function convert_amp_bind_attributes( $html ) {
 		$amp_bind_attr_prefix = self::get_amp_bind_placeholder_prefix();
+
 		// Pattern for HTML attribute accounting for binding attr name, boolean attribute, single/double-quoted attribute value, and unquoted attribute values.
 		$attr_regex = '#^\s+(?P<name>\[?[a-zA-Z0-9_\-]+\]?)(?P<value>=(?:"[^"]*+"|\'[^\']*+\'|[^\'"\s]+))?#';
+
 		/**
 		 * Replace callback.
 		 *
@@ -205,6 +228,7 @@ class AMP_DOM_Utils {
 			$offset    = 0;
 			while ( preg_match( $attr_regex, substr( $old_attrs, $offset ), $attr_matches ) ) {
 				$offset += strlen( $attr_matches[0] );
+
 				if ( '[' === $attr_matches['name'][0] ) {
 					$new_attrs .= ' ' . $amp_bind_attr_prefix . trim( $attr_matches['name'], '[]' );
 					if ( isset( $attr_matches['value'] ) ) {
@@ -214,12 +238,15 @@ class AMP_DOM_Utils {
 					$new_attrs .= $attr_matches[0];
 				}
 			}
+
 			// Bail on parse error which occurs when the regex isn't able to consume the entire $new_attrs string.
 			if ( strlen( $old_attrs ) !== $offset ) {
 				return $tag_matches[0];
 			}
+
 			return '<' . $tag_matches['name'] . $new_attrs . '>';
 		};
+
 		// Match all start tags that contain a binding attribute.
 		$pattern   = join( '', array(
 			'#<',
@@ -235,6 +262,7 @@ class AMP_DOM_Utils {
 			$replace_callback,
 			$html
 		);
+
 		/**
 		 * If the regex engine incurred an error during processing, for example exceeding the backtrack
 		 * limit, $converted will be null. In this case we return the originally passed document to allow
@@ -246,6 +274,7 @@ class AMP_DOM_Utils {
 		 */
 		return ( ! is_null( $converted ) ) ? $converted : $html;
 	}
+
 	/**
 	 * Convert AMP bind-attributes back to their original syntax.
 	 *
@@ -266,6 +295,7 @@ class AMP_DOM_Utils {
 		);
 		return $html;
 	}
+
 	/**
 	 * Return a valid DOMDocument representing arbitrary HTML content passed as a parameter.
 	 *
@@ -290,8 +320,11 @@ class AMP_DOM_Utils {
 			get_bloginfo( 'charset' ),
 			$content
 		);
+
 		return self::get_dom( $document );
+
 	}
+
 	/**
 	 * Return valid HTML *body* content extracted from the DOMDocument passed as a parameter.
 	 *
@@ -303,16 +336,20 @@ class AMP_DOM_Utils {
 	 */
 	public static function get_content_from_dom( $dom ) {
 		$body = $dom->getElementsByTagName( 'body' )->item( 0 );
+
 		// The DOMDocument may contain no body. In which case return nothing.
 		if ( is_null( $body ) ) {
 			return '';
 		}
+
 		return preg_replace(
 			'#^.*?<body.*?>(.*)</body>.*?$#si',
 			'$1',
 			self::get_content_from_dom_node( $dom, $body )
 		);
 	}
+
+
 	/**
 	 * Return valid HTML content extracted from the DOMNode passed as a parameter.
 	 *
@@ -333,6 +370,7 @@ class AMP_DOM_Utils {
 		 *      that saveXML() has generated a closing tag for.
 		 */
 		static $self_closing_tags_regex;
+
 		/*
 		 * Cache this regex so we don't have to recreate it every call.
 		 */
@@ -340,6 +378,7 @@ class AMP_DOM_Utils {
 			$self_closing_tags       = implode( '|', self::$self_closing_tags );
 			$self_closing_tags_regex = "#</({$self_closing_tags})>#i";
 		}
+
 		/*
 		 * Prevent amp-mustache syntax from getting URL-encoded in attributes when saveHTML is done.
 		 * While this is applying to the entire document, it only really matters inside of <template>
@@ -351,9 +390,10 @@ class AMP_DOM_Utils {
 		 */
 		$mustache_tag_placeholders = self::get_mustache_tag_placeholders();
 		$mustache_tags_replaced    = false;
-		$xpath                     = new DOMXPath( $dom );
+		$xpath                     = new \DOMXPath( $dom );
 		$templates                 = $dom->getElementsByTagName( 'template' );
 		foreach ( $templates as $template ) {
+
 			// These attributes are the only ones that saveHTML() will URL-encode.
 			foreach ( $xpath->query( './/*/@src|.//*/@href|.//*/@action', $template ) as $attribute ) {
 				$attribute->nodeValue = str_replace(
@@ -367,6 +407,28 @@ class AMP_DOM_Utils {
 				}
 			}
 		}
+
+		/*
+		 * libxml's HTML serializer does not escape <, >, or quotes inside an
+		 * attribute value that contains "&{" up to the next "}". Hold those
+		 * values out of saveHTML() and write them back escaped.
+		 */
+		$libxml_attr_placeholders = array();
+		foreach ( $xpath->query( '//@*' ) as $attribute ) {
+			$attr_value = $attribute->nodeValue;
+			$amp_brace  = strpos( $attr_value, '&{' );
+			if ( false === $amp_brace || false === strpos( $attr_value, '}', $amp_brace + 2 ) ) {
+				continue;
+			}
+			$token = 'ampforwpLibxmlAttr' . count( $libxml_attr_placeholders ) . 'T' . wp_rand();
+			$libxml_attr_placeholders[] = array(
+				'node'  => $attribute,
+				'token' => $token,
+				'value' => $attr_value,
+			);
+			$attribute->nodeValue = $token;
+		}
+
 		if ( version_compare( PHP_VERSION, '7.3', '>=' ) ) {
 			$html = $dom->saveHTML( $node );
 		} else {
@@ -377,6 +439,7 @@ class AMP_DOM_Utils {
 			 * to DOMDocument::saveHTML() then formatting whitespace gets added unexpectedly. This is seen to
 			 * be fixed in PHP 7.3, but for older versions of PHP the following workaround is needed.
 			 */
+
 			/*
 			 * First make sure meta[charset] gets http-equiv and content attributes to work around issue
 			 * with $dom->saveHTML() erroneously encoding UTF-8 as HTML entities.
@@ -386,6 +449,7 @@ class AMP_DOM_Utils {
 				$meta_charset->setAttribute( 'http-equiv', 'Content-Type' );
 				$meta_charset->setAttribute( 'content', sprintf( 'text/html; charset=%s', $meta_charset->getAttribute( 'charset' ) ) );
 			}
+
 			$boundary       = 'fragment_boundary:' . (string) wp_rand();
 			$start_boundary = $boundary . ':start';
 			$end_boundary   = $boundary . ':end';
@@ -398,21 +462,39 @@ class AMP_DOM_Utils {
 				'$1',
 				$dom->saveHTML()
 			);
+
 			// Remove meta[http-equiv] and meta[content] attributes which were added to meta[charset] for HTML serialization.
 			if ( $meta_charset ) {
 				if ( $dom->documentElement === $node ) {
 					$html = preg_replace( '#(<meta\scharset=\S+)[^<]*?>#i', '$1>', $html );
 				}
+
 				$meta_charset->removeAttribute( 'http-equiv' );
 				$meta_charset->removeAttribute( 'content' );
 			}
+
 			$node->parentNode->removeChild( $comment_start );
 			$node->parentNode->removeChild( $comment_end );
 		}
+
+		foreach ( $libxml_attr_placeholders as $placeholder ) {
+			/*
+			 * Assigning the raw value warns and clears the attribute, because
+			 * libxml treats "&{" as an entity. Assigning the escaped form
+			 * decodes back to the original value.
+			 */
+			$escaped_value = htmlspecialchars( $placeholder['value'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8' );
+			$placeholder['node']->nodeValue = $escaped_value;
+			if ( is_string( $html ) ) {
+				$html = str_replace( $placeholder['token'], $escaped_value, $html );
+			}
+		}
+
 		// Whitespace just causes unit tests to fail... so whitespace begone.
 		if ( '' === trim( $html ) ) {
 			return '';
 		}
+
 		// Restore amp-mustache placeholders which were replaced to prevent URL-encoded corruption by saveHTML.
 		if ( $mustache_tags_replaced ) {
 			$html = str_replace(
@@ -421,6 +503,7 @@ class AMP_DOM_Utils {
 				$html
 			);
 		}
+
 		// Restore noscript elements which were temporarily removed to prevent libxml<2.8 parsing problems.
 		if ( version_compare( LIBXML_DOTTED_VERSION, '2.8', '<' ) ) {
 			$html = str_replace(
@@ -429,7 +512,9 @@ class AMP_DOM_Utils {
 				$html
 			);
 		}
+
 		$html = self::restore_amp_bind_attributes( $html );
+
 		/*
 		 * Travis w/PHP 7.1 generates <br></br> and <hr></hr> vs. <br/> and <hr/>, respectively.
 		 * Travis w/PHP 7.x generates <source ...></source> vs. <source ... />.  Etc.
@@ -437,8 +522,10 @@ class AMP_DOM_Utils {
 		 * This does not happen in my (@mikeschinkel) local testing, btw.
 		 */
 		$html = preg_replace( $self_closing_tags_regex, '', $html );
+
 		return $html;
 	}
+
 	/**
 	 * Create a new node w/attributes (a DOMElement) and add to the passed DOMDocument.
 	 *
@@ -453,8 +540,10 @@ class AMP_DOM_Utils {
 	public static function create_node( $dom, $tag, $attributes ) {
 		$node = $dom->createElement( $tag );
 		self::add_attributes_to_node( $node, $attributes );
+
 		return $node;
 	}
+
 	/**
 	 * Extract a DOMElement node's HTML element attributes and return as an array.
 	 *
@@ -470,11 +559,14 @@ class AMP_DOM_Utils {
 		if ( ! $node->hasAttributes() ) {
 			return $attributes;
 		}
+
 		foreach ( $node->attributes as $attribute ) {
 			$attributes[ $attribute->nodeName ] = $attribute->nodeValue;
 		}
+
 		return $attributes;
 	}
+
 	/**
 	 * Add one or more HTML element attributes to a node's DOMElement.
 	 *
@@ -488,6 +580,7 @@ class AMP_DOM_Utils {
 			$node->setAttribute( $name, $value );
 		}
 	}
+
 	/**
 	 * Determines if a DOMElement's node is empty or not..
 	 *
@@ -501,6 +594,7 @@ class AMP_DOM_Utils {
 	public static function is_node_empty( $node ) {
 		return false === $node->hasChildNodes() && empty( $node->textContent );
 	}
+
 	/**
 	 * Forces HTML element closing tags given a DOMDocument and optional DOMElement
 	 *
@@ -513,12 +607,15 @@ class AMP_DOM_Utils {
 	 */
 	public static function recursive_force_closing_tags( $dom, $node = null ) {
 		_deprecated_function( __METHOD__, '0.7' );
+
 		if ( is_null( $node ) ) {
 			$node = $dom->getElementsByTagName( 'body' )->item( 0 );
 		}
-		if ( XML_ELEMENT_NODE !== $node->nodeType ) {
+
+		if ( \XML_ELEMENT_NODE !== $node->nodeType ) {
 			return;
 		}
+
 		if ( self::is_self_closing_tag( $node->nodeName ) ) {
 			/*
 			 * Ensure there is no text content to accidentally force a child
@@ -526,17 +623,22 @@ class AMP_DOM_Utils {
 			$node->textContent = null;
 			return;
 		}
+
 		if ( self::is_node_empty( $node ) ) {
 			$text_node = $dom->createTextNode( '' );
 			$node->appendChild( $text_node );
+
 			return;
 		}
+
 		$num_children = $node->childNodes->length;
 		for ( $i = $num_children - 1; $i >= 0; $i -- ) {
 			$child = $node->childNodes->item( $i );
 			self::recursive_force_closing_tags( $dom, $child );
 		}
+
 	}
+
 	/**
 	 * Determines if an HTML element tag is validly a self-closing tag per W3C HTML5 specs.
 	 *
@@ -547,5 +649,21 @@ class AMP_DOM_Utils {
 	 */
 	private static function is_self_closing_tag( $tag ) {
 		return in_array( strtolower( $tag ), self::$self_closing_tags, true );
+	}
+	/**
+	 * Check whether a given element has a specific class.
+	 *
+	 * @since 1.4.0
+	 *
+	 * @param DOMElement $element Element to check the classes of.
+	 * @param string     $class   Class to check for.
+	 * @return bool Whether the element has the requested class.
+	 */
+	public static function has_class( \DOMElement $element, $class ) {
+		if ( ! $element->hasAttribute( 'class' ) ) {
+			return false;
+		}
+		$classes = $element->getAttribute( 'class' );
+		return in_array( $class, preg_split( '/\s/', $classes ), true );
 	}
 }

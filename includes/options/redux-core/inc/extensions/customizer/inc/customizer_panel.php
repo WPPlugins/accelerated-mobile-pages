@@ -1,5 +1,8 @@
 <?php
-
+namespace ReduxCore\ReduxFramework;
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
     /**
      * Customizer section representing widget area (sidebar).
      *
@@ -8,7 +11,7 @@
      * @since      4.1.0
      * @see        WP_Customize_Section
      */
-    class Redux_Customizer_Panel extends WP_Customize_Panel {
+    class Redux_Customizer_Panel extends \WP_Customize_Panel {
 
         /**
          * Type of this panel.
@@ -86,7 +89,7 @@
                             ),
                         ) );
                     ?>
-                    <span class="screen-reader-text"><?php esc_html_e( 'Press return or enter to open this panel', 'redux-framework' ); ?></span>
+                    <span class="screen-reader-text"><?php esc_html_e( 'Press return or enter to open this panel', 'accelerated-mobile-pages' ); ?></span>
                 </h3>
                 <ul class="accordion-sub-container control-panel-content">
                     <table class="form-table">
@@ -111,12 +114,13 @@
                 <div class="accordion-section-title" tabindex="0">
 				<span class="preview-notice"><?php
                         /* translators: %s is the site/panel title in the Customizer */
-                        echo sprintf( __( 'You are customizing %s', 'redux-framework' ), '<strong class="panel-title">' . esc_html( $this->title ) . '</strong>' );
+                        /* phpcs:ignore WordPress.WP.I18n.MissingTranslatorsComment , WordPress.Security.EscapeOutput.OutputNotEscaped  */
+                        echo sprintf( __( 'You are customizing %s', 'accelerated-mobile-pages' ), '<strong class="panel-title">' . esc_html( $this->title ) . '</strong>' );
                     ?></span>
                 </div>
                 <?php if ( ! empty( $this->description ) ) : ?>
                     <div class="accordion-section-content description legacy">
-                        <?php echo $this->description; ?>
+                        <?php /* phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped */ echo $this->description; ?>
                     </div>
                 <?php endif; ?>
             </li>
@@ -135,15 +139,17 @@
             ?>
             <li class="panel-meta customize-info redux-panel accordion-section <# if ( ! data.description ) { #> cannot-expand<# } #>">
                 <button class="customize-panel-back" tabindex="-1">
-                    <span class="screen-reader-text"><?php esc_attr_e( 'Back', 'redux-framework' ); ?></span></button>
+                    <span class="screen-reader-text"><?php esc_attr_e( 'Back', 'accelerated-mobile-pages' ); ?></span></button>
                 <div class="accordion-section-title">
 				<span class="preview-notice"><?php
                         /* translators: %s is the site/panel title in the Customizer */
-                        echo sprintf( __( 'You are customizing %s', 'redux-framework' ), '<strong class="panel-title">{{ data.title }}</strong>' );
+                        
+                        /* phpcs:ignore WordPress.WP.I18n.MissingTranslatorsComment, WordPress.Security.EscapeOutput.OutputNotEscaped */
+                        echo sprintf( __( 'You are customizing %s', 'accelerated-mobile-pages' ), '<strong class="panel-title">{{ data.title }}</strong>' );
                     ?></span>
                     <# if ( data.description ) { #>
                         <button class="customize-help-toggle dashicons dashicons-editor-help" tabindex="0" aria-expanded="false">
-                            <span class="screen-reader-text"><?php esc_attr_e( 'Help', 'redux-framework' ); ?></span></button>
+                            <span class="screen-reader-text"><?php esc_attr_e( 'Help', 'accelerated-mobile-pages' ); ?></span></button>
                         <# } #>
                 </div>
                 <# if ( data.description ) { #>

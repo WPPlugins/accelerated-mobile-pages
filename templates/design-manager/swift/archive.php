@@ -1,6 +1,14 @@
-<?php global $redux_builder_amp;
+<?php
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+global $redux_builder_amp;
 amp_header() ?>
 <div class="cntr archive">
+	<?php if(true == ampforwp_get_setting('ampforwp-yoast-bread-crumb')){
+		//phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		echo ampforwp_yoast_breadcrumbs_output();
+	  }?>
 	<div class="arch-tlt">
 		<?php amp_archive_title(); ?>
 	</div>
@@ -14,20 +22,14 @@ amp_header() ?>
 		if(isset($redux_builder_amp['gbl-sidebar']) && $redux_builder_amp['gbl-sidebar'] == '1'){ ?>
 		<div class="sdbr-right">
 			<?php 
-				ob_start();
-				dynamic_sidebar('swift-sidebar');
-				$swift_footer_widget = ob_get_contents();
-				ob_end_clean();
-				$sanitizer_obj = new AMPFORWP_Content( 
-									$swift_footer_widget,
-									array(), 
-									apply_filters( 'ampforwp_content_sanitizers', 
-										array( 'AMP_Img_Sanitizer' => array(), 'AMP_Style_Sanitizer' => array(), 
-										) 
-									) 
-								);
-				 $sanitized_footer_widget =  $sanitizer_obj->get_amp_content();
-	              echo $sanitized_footer_widget;
+			$sidebar_output = '';
+				$sanitized_sidebar = ampforwp_sidebar_content_sanitizer('swift-sidebar');
+			if ( $sanitized_sidebar) {
+				$sidebar_output = $sanitized_sidebar->get_amp_content();
+				$sidebar_output = apply_filters('ampforwp_modify_sidebars_content',$sidebar_output);
+			}
+			//phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+            echo $sidebar_output;// amphtml content, no kses
 			?>
 		</div>
 		<?php } ?>

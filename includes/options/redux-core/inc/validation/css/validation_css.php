@@ -1,5 +1,7 @@
 <?php
-
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
     if ( ! class_exists( 'Redux_Validation_css' ) ) {
         class Redux_Validation_css {
 
@@ -36,7 +38,7 @@
                 $data = stripslashes($data);
 
                 if ($data != $this->value) {
-                    $this->field['msg'] = __( 'Unsafe strings were found in your CSS and have been filtered out.', 'redux-framework' );
+                    $this->field['msg'] = __( 'Unsafe strings were found in your CSS and have been filtered out.', 'accelerated-mobile-pages' );
                     $this->warning = $this->field;
                 }
 

@@ -1,5 +1,7 @@
 <?php
-
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
     if ( ! class_exists( 'Redux_Validation_date' ) ) {
         class Redux_Validation_date {
 
@@ -13,7 +15,7 @@
 
                 $this->parent       = $parent;
                 $this->field        = $field;
-                $this->field['msg'] = ( isset( $this->field['msg'] ) ) ? $this->field['msg'] : __( 'This field must be a valid date.', 'redux-framework' );
+                $this->field['msg'] = ( isset( $this->field['msg'] ) ) ? $this->field['msg'] : __( 'This field must be a valid date.', 'accelerated-mobile-pages' );
                 $this->value        = $value;
                 $this->current      = $current;
 

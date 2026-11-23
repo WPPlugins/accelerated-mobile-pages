@@ -1,7 +1,9 @@
 <?php 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) exit;
 $output = '
 	{{if_condition_video_option==custom}}
-	<amp-video width="{{width}}" height="{{height}}" src="{{video_upload_link}}"
+	<amp-video {{if_id}}id="{{id}}"{{ifend_id}} class="{{user_class}}" width="{{width}}" height="{{height}}" src="{{video_upload_link}}"
 	 layout="responsive"   
 	  {{if_condition_custom_video_more_info==1}}poster="{{poster}}"
 	  artist="{{artist}}"
@@ -12,14 +14,16 @@ $output = '
 	  controls >
 	  <source src="{{video_upload_link}}"
     type="video/mp4" />
-    <source type="{{video_upload_link}}"
-    src="/video/tokyo.webm">
+    <source type="video/webm"
+    src="{{video_upload_link}}">
 	</amp-video>
 	{{ifend_condition_video_option_custom}}
 
 	{{if_condition_video_option==youtube}}
-	<amp-youtube
+	<amp-youtube {{if_id}}id="{{id}}"{{ifend_id}}
     data-videoid="{{youtube_video_id}}"
+    {{if_condition_hide_rel_video==1}} data-param-rel="0" {{ifend_condition_hide_rel_video_1}}
+    {{if_condition_autoplay_video==1}} autoplay {{ifend_condition_autoplay_video_1}}
     layout="responsive"
     width="{{width}}" height="{{height}}"></amp-youtube>
     {{ifend_condition_video_option_youtube}}
@@ -85,6 +89,7 @@ return array(
 		 						'type'		=>'text',		
 		 						'name'		=>"video_upload_link",		
 		 						'label'		=>'Video link',
+		 						'helpmessage'	=> did_action( 'init' ) ? esc_html__('Please make sure to enter https url link.', 'accelerated-mobile-pages') : esc_html('Please make sure to enter https url link.'),
 		           				'tab'       =>'customizer',
 		 						'default'	=>'',	
 		           				'content_type'=>'html',
@@ -111,6 +116,35 @@ return array(
 	           				'required'  => array('video_option'=>'custom',
 											'video_option'=>'youtube',
 	           								),
+ 						),
+ 						array(		
+	 						'type'		=>'checkbox_bool',		
+	 						'name'		=>"autoplay_video",		
+	 						'label'		=>'Autoplay',
+	           				'tab'       =>'customizer',
+	 						'default'	=>1,
+	 						'options'	=>array(
+												array(
+													'value'=>1,
+												),
+											),
+	 						'content_type'=>'html',
+	           				'required'  => array('video_option'=>'youtube'),
+ 						),
+ 						array(		
+	 						'type'		=>'checkbox_bool',		
+	 						'name'		=>"hide_rel_video",		
+	 						'label'		=>'Hide other channels related video',
+	           				'tab'       =>'customizer',
+	 						'default'	=>1,
+	 						'options'	=>array(
+												array(
+													'label'=>'Setting this option will show given youtube video id channels related videos only.',
+													'value'=>1,
+												),
+											),
+	 						'content_type'=>'html',
+	           				'required'  => array('video_option'=>'youtube'),
  						),
  						array(		
 	 						'type'		=>'checkbox_bool',		
@@ -202,6 +236,22 @@ return array(
 	 						'content_type'=>'js',
 	           				'required'  => array('video_option'=>'embed'),
  						),
+ 						array(
+							'type'		=>'text',
+							'name'		=>"id",
+							'label'		=>'ID',
+							'tab'		=>'advanced',
+							'default'	=>'',
+							'content_type'=>'html'
+						),
+						array(
+							'type'		=>'text',
+							'name'		=>"user_class",
+							'label'		=>'Class',
+							'tab'		=>'advanced',
+							'default'	=>'',
+							'content_type'=>'html'
+						),
 			),
 		'front_template'=> $output,
 		'front_css'=> $css,

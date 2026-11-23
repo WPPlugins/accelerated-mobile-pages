@@ -1,36 +1,32 @@
 <?php
-if ( 4 == $ampforwp_design_selector ) {
-	define('AMPFORWP_CUSTOM_THEME', AMPFORWP_PLUGIN_DIR . 'templates/design-manager/swift' );
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
 }
-elseif ( ! defined('AMPFORWP_CUSTOM_THEME') ) {
-	define('AMPFORWP_CUSTOM_THEME', AMPFORWP_MAIN_PLUGIN_DIR."/".$ampforwp_design_selector);
-}
-
-	require_once(  AMPFORWP_CUSTOM_THEME . '/functions.php' );
-	//Filter the Template files to override previous ones
-	//add_filter( 'amp_post_template_file', 'ampforwp_custom_header_file', 10, 2 );
-	add_filter( 'amp_post_template_file', 'ampforwp_designing_custom_template', 10, 3 );
-	//add_filter( 'amp_post_template_file', 'ampforwp_custom_footer_file', 10, 2 );
-
-	// Custom Header
-	function ampforwp_custom_header_file( $file, $type ) {
-		if ( 'header' === $type ) {
-			$file = AMPFORWP_CUSTOM_THEME . '/header.php';
-		}
-		return $file;
+	$amp_main_dir = AMPFORWP_PLUGIN_DIR . 'templates/design-manager/swift';
+	if ( 4 != $ampforwp_design_selector ) {
+		$amp_main_dir = WP_PLUGIN_DIR.'/'. esc_attr($ampforwp_design_selector);
 	}
+	$amp_theme_dir = apply_filters('ampforwp_theme_dir', $amp_main_dir);
+	if ( ! is_dir($amp_theme_dir)) {
+		$amp_theme_dir  = $amp_main_dir;
+	}
+	define('AMPFORWP_CUSTOM_THEME', $amp_theme_dir );
+	// Include functions.php 
+	$function_file =  AMPFORWP_CUSTOM_THEME . '/functions.php';
+	if ( ! file_exists($function_file)) {
+		$function_file = $amp_main_dir .'/functions.php';
+	}
+	if ( file_exists($function_file)){
+		require_once( $function_file );	
+	}
+	//Filter the Template files to override previous ones
+	add_filter( 'amp_post_template_file', 'ampforwp_designing_custom_template', 10, 3 );
 
 	// Custom Template Files
 	function ampforwp_designing_custom_template( $file, $type, $post ) {
 	 global $redux_builder_amp;
-		// Single file
-	    /*if ( is_single() ) {
-			if( 'single' === $type && ! ('product' === $post->post_type) ) {
-				$file = AMPFORWP_CUSTOM_THEME . '/single.php';
-		 	}
-		}*/
-		// 404 Template
 
+		// 404 Template
 	 	if( 'single' === $type && is_404() ) {
 			$file = AMPFORWP_CUSTOM_THEME . '/404.php';
 	 	}
@@ -56,7 +52,7 @@ elseif ( ! defined('AMPFORWP_CUSTOM_THEME') ) {
 			if ( 'single' === $type ) {
 	        	$file = AMPFORWP_CUSTOM_THEME . '/index.php';
 	        
-		        if ( $redux_builder_amp['amp-frontpage-select-option'] == 1 ) {
+		        if ( isset($redux_builder_amp['amp-frontpage-select-option']) && $redux_builder_amp['amp-frontpage-select-option'] == 1 ) {
 					$file = AMPFORWP_CUSTOM_THEME . '/page.php';
 		        }
 		        if ( ampforwp_is_blog() ) {
@@ -150,7 +146,8 @@ elseif ( ! defined('AMPFORWP_CUSTOM_THEME') ) {
 				}
 	    	break;
 	    	case (is_archive()):
-	    		$post_types = array_filter( (array) get_query_var( 'post_type' ) );
+	    		$p_type = esc_attr(get_query_var( 'post_type' ));
+	    		$post_types = array_filter( (array) $p_type );
 				$templates = array();
 				if ( count( $post_types ) == 1 ) {
 					$post_type = reset( $post_types );
@@ -174,8 +171,8 @@ elseif ( ! defined('AMPFORWP_CUSTOM_THEME') ) {
 					//return '';
 					break;
 				}
-
-				$post_types = array_filter( (array) get_query_var( 'post_type' ) );
+				$p_type = esc_attr(get_query_var( 'post_type' ));
+				$post_types = array_filter( (array) $p_type );
 
 				$templates = array();
 
@@ -199,7 +196,7 @@ elseif ( ! defined('AMPFORWP_CUSTOM_THEME') ) {
 				if ( ! empty( $object->post_type ) ) {
 					$template = get_page_template_slug( $object );
 					if ( $template && 0 === validate_file( $template ) ) {
-						$templates[] = $template;
+						$templates[] = AMPFORWP_CUSTOM_THEME.'/'.$template;
 					}
 
 					$name_decoded = urldecode( $object->post_name );
@@ -234,7 +231,7 @@ elseif ( ! defined('AMPFORWP_CUSTOM_THEME') ) {
 
 				$templates = array();
 				if ( $template && 0 === validate_file( $template ) )
-					$templates[] = $template;
+					$templates[] = AMPFORWP_CUSTOM_THEME.'/'.$template;
 				if ( $pagename ) {
 					$pagename_decoded = urldecode( $pagename );
 					if ( $pagename_decoded !== $pagename ) {
@@ -258,22 +255,14 @@ elseif ( ! defined('AMPFORWP_CUSTOM_THEME') ) {
 	    if ( 'single' === $type && ampforwp_polylang_front_page() && true == $redux_builder_amp['amp-frontpage-select-option'] ) {
 			$file = AMPFORWP_CUSTOM_THEME . '/page.php';
 		}
+		if ( ! file_exists($file)) {
+
+			$exploded_path  =  explode('/', $file);
+			$file_name  	= end($exploded_path);
+
+			$amp_fallback_theme_dir = AMPFORWP_PLUGIN_DIR . 'templates/design-manager/swift';
+
+			$file = $amp_fallback_theme_dir .'/'. $file_name;
+		}
 	 	return $file;
 	}
-
-	// Custom Footer
-	function ampforwp_custom_footer_file( $file, $type ) {
-		if ( 'footer' === $type ) {
-			$file = AMPFORWP_CUSTOM_THEME . '/footer.php';
-		}
-		return $file;
-	}
-	// Load the Core Styles of Custom Theme
-	//add_action('amp_css', 'ampforwp_custom_style');
-	function ampforwp_custom_style() { 
-		global $redux_builder_amp; 
-		require_once( AMPFORWP_CUSTOM_THEME . '/style.php' );
-		// Custom CSS
-		echo $redux_builder_amp['css_editor']; 
-	}
-

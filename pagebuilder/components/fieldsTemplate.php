@@ -1,4 +1,6 @@
- <script type="text/x-template" id="fields-data-template">
+<?php // Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) exit; ?>
+<script type="text/x-template" id="fields-data-template">
     <div class="amp-form-control" :id="field.name" data-type="text" v-if="field.type=='text' && (field.tab==defaulttab || repeater==1)" :data-require="JSON.stringify(field.required)" v-show="fieldShowHideCheck(field)">
         
         <div class="form-label">{{field.label}}</div>
@@ -33,7 +35,7 @@
     </div>
     
     <div class="amp-form-control" :id="field.name" data-type="text-editor" v-else-if="field.type=='text-editor' && (field.tab==defaulttab || repeater==1)" :data-require="JSON.stringify(field.required)" v-show="fieldShowHideCheck(field)">
-        <div class="form-label" style="position: absolute;margin-top: 10px;">{{field.label}}</div>
+        <div class="form-label" style="margin-top: 10px;">{{field.label}}</div>
         <div class="form-field"><textarea-wysiwyg :default-text="field" :fieldindex="fieldkey"></textarea-wysiwyg>
         <div class="help-msg" v-html="field.helpmessage"></div>
         </div>
@@ -43,7 +45,7 @@
     <div class="amp-form-control" :id="field.name" data-type="select" v-else-if="field.type=='select' && (field.tab==defaulttab || repeater==1)" :data-require="JSON.stringify(field.required)" v-show="fieldShowHideCheck(field)">
         <div class="form-label">{{field.label}}</div>
         <div class="form-field">
-            <select type="text" class="full text" :id="field.id" :name="field.name" v-model="field.default" v-if="field.options_details.length!=0">
+            <select type="text" class="full text" :id="field.id" :name="field.name" v-model="field.default" v-if="field.options_details.length!=0"  :data-ajax="field.ajax" :data-ajax-dep="field.ajax_dep" :data-ajax-action="field.ajax_action" @change="changeOnSelect()">
                 <option value="">Select option</option>
                 <option 
                     v-for="(option, key, index) in field.options_details"
@@ -54,6 +56,7 @@
                 </option>
             </select>
             <div class="help-msg" v-html="field.helpmessage"></div>
+            <div class="spinner spinner-cat-mod" :id="field.name+1"></div>
         </div>
         <div class="clearfix"></div>
     </div>
@@ -128,6 +131,7 @@
             <input type="hidden" name="ampforwp_image_id" class="regular-text" v-model="field.default"/>
         
             <div v-if="field.default!=''" style="position: relative;display: inline-block;">
+                <?php /* phpcs:ignore PluginCheck.CodeAnalysis.ImageFunctions.NonEnqueuedImage */?>
                  <img v-if="field.default!=''" src="../wp-includes/images/spinner.gif" :data-src="refresh_image(field.default,this,'tag',field)" class="amppbimageuploadField"/>
                 <span class="dashicons-before dashicons-no link" @click="removeSelectedImage(field)"></span>
             </div>
@@ -407,6 +411,7 @@
                     :data-value="option.value"
                     :class="{'active': (field.default==option.value)}" @click="select_layout_type(field, $event)">
                 <label  :data-value="option.value">{{option.label}}</label>
+                <?php /* phpcs:ignore PluginCheck.CodeAnalysis.ImageFunctions.NonEnqueuedImage */?>
                 <img  :data-value="option.value" :src="option.demo_image">
             </div>
             <div class="help-msg" v-html="field.helpmessage"></div>

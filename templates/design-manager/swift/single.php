@@ -1,6 +1,13 @@
-<?php global $redux_builder_amp; ?>
-<?php amp_header(); ?>
-<?php if($redux_builder_amp['single-design-type'] == '1'){?>
+<?php 
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+global $redux_builder_amp; ?>
+<?php amp_header(); 
+$paged = get_query_var( 'paged' );
+$page = get_query_var( 'page' );
+$page = intval($page); ?>
+<?php if(ampforwp_get_setting('single-design-type') == '1'){?>
 <div class="sp sgl">
 	<?php if(!checkAMPforPageBuilderStatus(get_the_ID())){ ?>
 		<div class="cntr">
@@ -11,203 +18,159 @@
 			<?php amp_title(); ?>
 			<?php if( true == $redux_builder_amp['enable-excerpt-single'] ){ ?>
 				<div class="tl-exc">
-				   <?php amp_excerpt(20); ?>
+				   <?php amp_excerpt(); ?>
 			    </div>
 			<?php } ?>
+			<?php 
+			if( true == ampforwp_get_setting('amp-author-name') && true == ampforwp_get_setting('amp-author-name-display') ) {?>
+			    <div class="sp-athr mob-athr">
+			        <span class="athr-tx"><?php echo esc_attr(ampforwp_translation(ampforwp_get_setting('amp-translator-published-by'), 'Published by' )); ?></span>
+			            <?php amp_author_box( 
+							array('author_pub_name'=>true,'author_info'=>true)
+						); ?>
+			    </div>
+			 <?php } 
+			if( true == ampforwp_get_setting('swift-date') && true == ampforwp_get_setting('amp-published-date-display')) { ?>
+			            <div class="post-date mob-date">
+			            	<?php amp_date(); ?><?php edit_post_link(); ?>
+			            </div>
+					<?php do_action('ampforwp_post_views_ctr'); ?> 
+		            <?php } ?>
 		</div>
-		<?php if ( isset($redux_builder_amp['swift-featued-image']) && $redux_builder_amp['swift-featued-image'] && ampforwp_has_post_thumbnail() ) { ?>
+		<?php 
+	   	if($paged==0 && $page==0){
+	   		if ( ampforwp_get_setting('swift-featued-image') && ampforwp_has_post_thumbnail() ) { ?>
+			<?php if ( ampforwp_get_setting('swift-featued-image-type') == 1 || empty(ampforwp_get_setting('swift-featued-image-type')) ) { ?>
 			<div class="sf-img">
 				<?php amp_featured_image();?>
 			</div>
-		<?php }
+			<?php }	// Swift Featured Image Type 1
+		}
+	}
 	} ?>
 	<div class="sp-cnt">
 		<div class="cntr">
 			<div class="sp-rl">
 				<div class="sp-rt">
+					<?php if (isset($redux_builder_amp['swift-social-position']) && 'above-content' == $redux_builder_amp['swift-social-position']){
+							ampforwp_swift_social_icons(); 
+						}
+						if ( 'above-content' ==  ampforwp_get_setting('swift-add-this-position') ){
+							ampforwp_addthis_support(); 
+						}	?>
 					<div class="cntn-wrp artl-cnt">
-						<?php amp_content(); ?>
+						<?php 
+				    if($paged==0 && $page==0){
+						if ( ampforwp_get_setting('swift-featued-image') && ampforwp_has_post_thumbnail() ) { ?>
+							<?php if ( ampforwp_get_setting('swift-featued-image-type') == 2) { ?>
+								<div class="sf-img">
+									<?php amp_featured_image();?>	
+								</div>	
+							<?php }	// Swift Featured Image Type 2
+						} // Swift Featured Image 
+					}?>
+						<?php 
+					// if you want to add anything before or after the content then you can use 'ampforwp_before_post_content' or 'ampforwp_after_post_content' hooks and here is the list of all our hooks - https://ampforwp.com/tutorials/article/hooks-in-ampforwp/
+					amp_content(); 
+					?>
 					</div>
+					<?php do_action( 'ampforwp_after_the_post_content_wrp' ); ?>
+					<?php if (isset($redux_builder_amp['swift-social-position']) && 'below-content' == $redux_builder_amp['swift-social-position']){
+						ampforwp_swift_social_icons(); 
+						}
+						if ( 'below-content' ==  ampforwp_get_setting('swift-add-this-position') ){
+							ampforwp_addthis_support();
+						} ?>
 					<?php if(!checkAMPforPageBuilderStatus(get_the_ID())){ ?>
-					<?php if( $redux_builder_amp['amp-author-description'] ) { ?>
-						<?php amp_author_box( 
-											array(	'avatar'=>true,
-													'avatar_size'=>60,
-													'author_description'=>true,
-													'ads_below_the_author'=>true)
-											); ?>
+					<?php 
+ 						$author_box = array();
+						if( true == ampforwp_get_setting('amp-author-description') ) { ?>	
+						<?php
+						$author_box = array( 'avatar'=>true,
+													'avatar_size'=>60,	
+													'author_description'=>true,	
+													'ads_below_the_author'=>true);
+						if( true == ampforwp_get_setting('amp-author-bio-name')){
+							$author_box['author_pub_name'] = true ;
+						}
+						amp_author_box( $author_box ); ?>	
 					<?php } ?>
 					<?php amp_post_navigation();?>
+					<?php if ((true == ampforwp_get_setting('wordpress-comments-support') && comments_open()) || true == ampforwp_get_setting('ampforwp-disqus-comments-support') || true == ampforwp_get_setting('ampforwp-facebook-comments-support') ||true == ampforwp_get_setting('ampforwp-vuukle-comments-support') ||true == ampforwp_get_setting('ampforwp-spotim-comments-support') ){ ?>
 					<div class="cmts">
 						<?php amp_comments();?>
-						<?php do_action('ampforwp_post_after_design_elements'); ?>
 					</div>
 					<?php } ?>
+						<?php do_action('ampforwp_post_after_design_elements'); ?>
+					<?php } ?>
 				</div>
-				<?php if(!checkAMPforPageBuilderStatus(get_the_ID())){ ?>
+				<?php if(!checkAMPforPageBuilderStatus(get_the_ID()) && (true == ampforwp_get_setting('enable-single-post-social-icons') || true == ampforwp_get_setting('amp-author-name') || true == ampforwp_get_setting('swift-date') || true == ampforwp_get_setting('ampforwp-single-related-posts-switch'))){ ?>
 				<div class="sp-lt">
-					<div class="ss-ic">
-						<span class="shr-txt"><?php echo ampforwp_translation($redux_builder_amp['amp-translator-share-text'], 'Share' ); ?></span>
-						<ul>
-							<?php if($redux_builder_amp['enable-single-facebook-share']){?>
-							<li>
-								<a title="facebook share" class="s_fb" target="_blank" href="https://www.facebook.com/sharer.php?u=<?php the_permalink(); ?>"></a>
-							</li>
-							<?php } ?>
-							<?php if($redux_builder_amp['enable-single-twitter-share']){?>
-							<li>
-								<a title="twitter share" class="s_tw" target="_blank" href="https://twitter.com/intent/tweet?url=<?php the_permalink(); ?>&text=<?php echo esc_attr(htmlspecialchars(get_the_title())); ?>">
-								</a>
-							</li>
-							<?php } ?>
-							<?php if($redux_builder_amp['enable-single-gplus-share']){?>
-							<li>
-								<a title="google plus share" class="s_gp" target="_blank" href="https://plus.google.com/share?url=<?php the_permalink(); ?>"></a>
-							</li>
-							<?php } ?>
-							<?php if($redux_builder_amp['enable-single-email-share']){?>
-							<li>
-								<a title="mail" class="s_em" target="_blank" href="mailto:?subject=<?php echo esc_attr(htmlspecialchars(get_the_title())); ?>&body=<?php the_permalink(); ?>"></a>
-							</li>
-							<?php } ?>
-							<?php if($redux_builder_amp['enable-single-pinterest-share']){
-								$image = '';
-								if (ampforwp_has_post_thumbnail( ) ){
-	 								$image = ampforwp_get_post_thumbnail( 'url', 'full' );
-	 							}?>
-							<li>
-								<a title="pinterest share" class="s_pt" target="_blank" href="https://pinterest.com/pin/create/button/?media=<?php echo esc_url($image); ?>&url=<?php esc_url(the_permalink()); ?>&description=<?php echo esc_attr(htmlspecialchars(get_the_title())); ?>"></a>
-							</li>
-							<?php } ?>
-							<?php if($redux_builder_amp['enable-single-linkedin-share']){?>
-							<li>
-								<a title="linkedin share" class="s_lk" target="_blank" href="https://www.linkedin.com/shareArticle?url=<?php the_permalink(); ?>&title=<?php echo esc_attr(htmlspecialchars(get_the_title())); ?>"></a>
-							</li>
-							<?php } ?>
-							<?php if($redux_builder_amp['enable-single-whatsapp-share']){?>
-							<li>
-								<a title="whatsapp share" class="s_wp" target="_blank" href="whatsapp://send?text=<?php the_permalink(); ?>" data-action="share/whatsapp/share"></a>
-							</li>
-							<?php } ?>
-							<?php if($redux_builder_amp['enable-single-vk-share']){?>
-							<li>
-								<a title="vkontakte share" class="s_vk" target="_blank" href="http://vk.com/share.php?url=<?php the_permalink(); ?>"></a>
-							</li>
-							<?php } ?>
-							<?php if($redux_builder_amp['enable-single-odnoklassniki-share']){?>
-							<li>
-								<a title="odnoklassniki share" class="s_od" target="_blank" href="https://ok.ru/dk?st.cmd=addShare&st._surl=<?php the_permalink(); ?>"></a>
-							</li>
-							<?php } ?>
-							<?php if($redux_builder_amp['enable-single-reddit-share']){?>
-							<li>
-								<a title="reddit share" class="s_rd" target="_blank" href="https://reddit.com/submit?url=<?php the_permalink(); ?>&title=<?php echo esc_attr(htmlspecialchars(get_the_title())); ?>"></a>
-							</li>
-							<?php } ?>
-							<?php if($redux_builder_amp['enable-single-tumblr-share']){?>
-							<li>
-								<a title="tumblr share" class="s_tb" target="_blank" href="https://www.tumblr.com/widgets/share/tool?canonicalUrl=<?php the_permalink(); ?>"></a>
-							</li>
-							<?php } ?>
-							<?php if($redux_builder_amp['enable-single-telegram-share']){?>
-							<li>
-								<a title="telegram share" class="s_tg" target="_blank" href="https://telegram.me/share/url?url=<?php the_permalink(); ?>&text=<?php echo esc_attr(htmlspecialchars(get_the_title())); ?>"></a>
-							</li>
-							<?php } ?>
-							<?php if($redux_builder_amp['enable-single-digg-share']){?>
-							<li>
-								<a title="digg share" class="s_dg" target="_blank" href="http://digg.com/submit?url=<?php the_permalink(); ?>&title=<?php echo esc_attr(htmlspecialchars(get_the_title())); ?>"></a>
-							</li>
-							<?php } ?>
-							<?php if($redux_builder_amp['enable-single-stumbleupon-share']){?>
-							<li>
-								<a title="stumbleupon share" class="s_su" target="_blank" href="http://www.stumbleupon.com/submit?url=<?php the_permalink(); ?>&title=<?php echo esc_attr(htmlspecialchars(get_the_title())); ?>"></a>
-							</li>
-							<?php } ?>
-							<?php if($redux_builder_amp['enable-single-wechat-share']){?>
-							<li>
-								<a title="wechat share" class="s_wc" target="_blank" href="http://api.addthis.com/oexchange/0.8/forward/wechat/offer?url=<?php the_permalink(); ?>"></a>
-							</li>
-							<?php } ?>
-							<?php if($redux_builder_amp['enable-single-viber-share']){?>
-							<li>
-								<a title="viber share" class="s_vb" target="_blank" href="viber://forward?text=<?php the_permalink(); ?>"></a>
-							</li>
-							<?php } ?>
-							<?php if ( isset($redux_builder_amp['enable-single-yummly-share']) && $redux_builder_amp['enable-single-yummly-share']){?>
-							<li>
-								<a title="yummly share" class="s_ym" target="_blank" href="http://www.yummly.com/urb/verify?url=<?php the_permalink(); ?>&title=<?php echo esc_attr(htmlspecialchars(get_the_title())); ?>&yumtype=button"></a>
-							</li>
-							<?php } ?>
-							<?php if ( isset($redux_builder_amp['enable-single-hatena-bookmarks']) && $redux_builder_amp['enable-single-hatena-bookmarks']){?>
-							<li>
-								<a title="hatena share" class="s_hb" target="_blank" href="http://b.hatena.ne.jp/entry/<?php the_permalink(); ?>&title=<?php echo esc_attr(htmlspecialchars(get_the_title())); ?>"></a>
-							</li>
-							<?php } ?>
-							<?php if ( isset($redux_builder_amp['enable-single-pocket-share']) && $redux_builder_amp['enable-single-pocket-share']){?>
-							<li>
-								<a title="pocket share" class="s_pk" target="_blank" href="https://getpocket.com/save?url=<?php the_permalink(); ?>&title=<?php echo esc_attr(htmlspecialchars(get_the_title())); ?>"></a>
-							</li>
-							<?php } ?>
-							<?php if($redux_builder_amp['ampforwp-facebook-like-button']){?>
-							<li>
-							<?php if( ampforwp_is_non_amp() && isset($redux_builder_amp['ampforwp-amp-convert-to-wp']) && $redux_builder_amp['ampforwp-amp-convert-to-wp']) { ?>	
-								<div class="fb-like" 
-    								data-href="<?php echo esc_url(get_the_permalink());?>" 
-									data-layout="button_count" 
-    								data-action="like" 
-    								data-show-faces="true">
-  								</div>
-							<?php }
-							else { ?>
-								<amp-facebook-like width=90 height=28
-				 					layout="fixed"
-				 					data-size="large"
-				    				data-layout="button_count"
-				    				data-href="<?php echo esc_url(get_the_permalink());?>">
-								</amp-facebook-like>
-							<?php } ?>
-							</li>
-							<?php } ?>
-
-						</ul>
-		            </div>
-		            <?php if( isset($redux_builder_amp['amp-author-name']) && $redux_builder_amp['amp-author-name'] ) { ?>
-			            <div class="sp-athr">
-			            	<span class="athr-tx"><?php echo ampforwp_translation($redux_builder_amp['amp-translator-published-by'], 'Published by' ); ?></span>
-			            	<?php amp_author_box(); ?>
+					<?php if (isset($redux_builder_amp['swift-social-position']) && 'default' == $redux_builder_amp['swift-social-position']){
+						ampforwp_swift_social_icons(); 
+						}
+						if ( 'default' ==  ampforwp_get_setting('swift-add-this-position') ){
+								ampforwp_addthis_support(); 
+						} ?>
+		              <?php if( true == ampforwp_get_setting('amp-author-name') ) { ?>
+			            <div class="sp-athr desk-athr">
+			            	<span class="athr-tx"><?php echo esc_attr(ampforwp_translation($redux_builder_amp['amp-translator-published-by'], 'Published by' )); ?></span>
+			            	<?php amp_author_box( 
+										array('author_pub_name'=>true,'author_info'=>true)
+										); ?>
 			            </div>
-			         <?php } ?>   
+			         <?php } ?>    
 		            <?php if( true == $redux_builder_amp['ampforwp-tags-single'] && amp_tags_list()){ ?>
 			            <div class="tags">
 			            	<?php amp_tags_list();?>
 			            </div>
-		            <?php } 
-		            if( true == $redux_builder_amp['swift-date'] ) { ?>
-			            <div class="post-date">
-			            	<?php amp_date(); ?><?php edit_post_link(); ?>
+		            <?php }
+		            if ( ampforwp_post_has_custom_taxonomies() ) { ?>
+			            <div class="tags ampforwp-custom-taxonomies">
+			            	<?php ampforwp_display_custom_taxonomies( null, array( 'wrapper_class' => 'amp-tags', 'term_prefix' => 'amp-tag-' ) ); ?>
 			            </div>
 		            <?php }
-		            if ( isset($redux_builder_amp['ampforwp-single-related-posts-switch']) && $redux_builder_amp['ampforwp-single-related-posts-switch'] ) {
-					$my_query = related_post_loop_query();
+		             if( true == ampforwp_get_setting('swift-date') ) { ?>
+			            <div class="post-date desk-date">
+			            	<?php amp_date(); ?><?php edit_post_link(); ?>
+			            </div>
+                          <?php do_action('ampforwp_post_views_ctr'); ?>
+		            <?php }
+		            if ( ampforwp_get_setting('rp_design_type') == '1' && true == ampforwp_get_setting('ampforwp-single-related-posts-switch')) {
+					$my_query = ampforwp_related_post_loop_query();
 				  	if( $my_query->have_posts() ) { $r_count = 1;?>
 				  	<div class="srp">
 			            <ul class="clearfix">
 					        <?php ampforwp_related_post(); ?>
 					        <?php
+					          $current_id = ampforwp_get_the_ID();	
 					          while( $my_query->have_posts() ) {
 					            $my_query->the_post();
+					          if(ampforwp_get_the_ID()==$current_id){
+					            continue;
+					          }
 					        ?>
 					        <li class="<?php if ( has_post_thumbnail() ) { echo'has_thumbnail'; } else { echo 'no_thumbnail'; } ?>">
 					        	<?php if ( true == $redux_builder_amp['ampforwp-single-related-posts-image'] ) { if(ampforwp_has_post_thumbnail()){?>
 						            <div class="rlp-image">     
-						                 <?php ampforwp_get_relatedpost_image('full',array('image_crop'=>'true','image_crop_width'=>220,'image_crop_height'=>134) );?>
+						                 <?php 
+							                $r_width = 220;
+											$r_height = 134;
+
+									 if ( ampforwp_get_setting('ampforwp-single-related-posts-change-image-size') &&  ampforwp_get_setting('ampforwp-single-related-posts-image-width') && ampforwp_get_setting('ampforwp-single-related-posts-image-height')) {
+											$r_width = ampforwp_get_setting('ampforwp-single-related-posts-image-width');
+											$r_height = ampforwp_get_setting('ampforwp-single-related-posts-image-height');
+										}
+							                 ampforwp_get_relatedpost_image('full',array('image_crop'=>'true','image_crop_width'=>esc_attr($r_width),'image_crop_height'=>esc_attr($r_height)) );
+							            ?>
 									</div>
 								<?php } } ?>	
 								<div class="rlp-cnt">
-									<?php $argsdata = array(
+									<?php 
+									$show_excerpt_opt = ampforwp_get_setting('ampforwp-single-related-posts-excerpt');
+									$argsdata = array(
 											'show_author' => false,
-											'show_excerpt' =>false
+											'show_excerpt' => $show_excerpt_opt
 												);
 									ampforwp_get_relatedpost_content($argsdata); ?> 
 						        </div>
@@ -218,49 +181,180 @@
 					      } ?>
 	      				</ul>
 	      			</div>
+	      			<?php do_action('ampforwp_below_related_post'); ?>
 		            <?php wp_reset_postdata(); } ?>
 				</div>
 				<?php } ?>
 		    </div>
 		</div>
 	</div>
-<?php } 
-do_action("ampforwp_single_design_type_handle");
+<?php 
+do_action("ampforwp_single_design_type_handle_d1"); 
 	?>
-<?php if($redux_builder_amp['single-design-type'] == '1' && isset($redux_builder_amp['ampforwp-swift-recent-posts']) && $redux_builder_amp['ampforwp-swift-recent-posts']=='1' && !checkAMPforPageBuilderStatus(get_the_ID()) ) { ?>
-<div class="r-pf">
-	<div class="cntr">
-		<h3><?php echo ampforwp_translation($redux_builder_amp['amp-translator-recent-text'], 'Recent Posts' ); ?></h3>
-	<?php while( amp_loop('start', array( 'posts_per_page' => 6 ) ) ): ?>
-		<div class="fsp">
-			<?php if( ampforwp_has_post_thumbnail() ){
-				$width 	= 346;
-				$height = 188;
-				if( true == $redux_builder_amp['ampforwp-homepage-posts-image-modify-size'] ){
-					$width 	= $redux_builder_amp['ampforwp-swift-homepage-posts-width'];
-					$height = $redux_builder_amp['ampforwp-swift-homepage-posts-height'];
-				}
-				$args = array("tag"=>'div',"tag_class"=>'image-container','image_size'=>'full','image_crop'=>'true','image_crop_width'=>$width,'image_crop_height'=>$height, 'responsive'=> true); ?>
-			    <div class="fsp-img">
-			    	<?php amp_loop_image($args); ?>
-			    </div>
-		    <?php } ?>
-		    <div class="fsp-cnt">
-		    	<?php amp_loop_category(); ?>
-			    <?php amp_loop_title(); ?>
-			    <?php amp_loop_excerpt(20); ?>
-			    <div class="pt-dt">
-			    	<?php amp_loop_date(); ?>
-			    </div>
-		    </div>
+<?php if( ampforwp_get_setting('single-design-type') == '1' && ampforwp_get_setting('rp_design_type') == '2'){
+       if ( true == ampforwp_get_setting('ampforwp-single-related-posts-switch') && !checkAMPforPageBuilderStatus(get_the_ID()) ) {
+		$my_query = ampforwp_related_post_loop_query();
+	  	if( $my_query->have_posts() ) { $r_count = 1;?>
+	  	<div class="srp">
+	  		<div class="cntr">
+	  		<?php ampforwp_related_post(); ?>
+	            <ul class="clearfix">
+			        <?php
+			          $current_id = ampforwp_get_the_ID();	
+			          while( $my_query->have_posts() ) {
+			            $my_query->the_post();
+			          if(ampforwp_get_the_ID()==$current_id){
+			            continue;
+			           }
+			        ?>
+			        <li class="<?php if ( has_post_thumbnail() ) { echo'has_thumbnail'; } else { echo 'no_thumbnail'; } ?>">
+			        	<?php if ( true == $redux_builder_amp['ampforwp-single-related-posts-image'] ) { if(ampforwp_has_post_thumbnail()){?>
+				            <div class="rlp-image">     
+				                <?php 
+				                $r_width = 220;
+								$r_height = 134;
+								if ( ampforwp_get_setting('ampforwp-single-related-posts-change-image-size') &&  ampforwp_get_setting('ampforwp-single-related-posts-image-width') && ampforwp_get_setting('ampforwp-single-related-posts-image-height')) {
+										$r_width = ampforwp_get_setting('ampforwp-single-related-posts-image-width');
+										$r_height = ampforwp_get_setting('ampforwp-single-related-posts-image-height');
+									}
+				                 ampforwp_get_relatedpost_image('full',array('image_crop'=>'true','image_crop_width'=>esc_attr($r_width),'image_crop_height'=>esc_attr($r_height)) );?>
+							</div>
+						<?php } } ?>	
+						<div class="rlp-cnt">
+							<?php
+							$show_excerpt_opt = ampforwp_get_setting('ampforwp-single-related-posts-excerpt');
+							$argsdata = array(
+									'show_author' =>  false,
+									'show_excerpt' => $show_excerpt_opt
+										);
+							ampforwp_get_relatedpost_content($argsdata); ?> 
+				        </div>
+			        </li><?php
+	            			do_action('ampforwp_between_related_post',$r_count);
+	     							 $r_count++;
+			        }
+			      } ?>
+				</ul>
+			</div>
+			<?php do_action('ampforwp_below_related_post'); ?>
 		</div>
-	<?php endwhile; amp_loop('end');  ?>
+    <?php wp_reset_postdata(); }  } ?>
+<?php if( ampforwp_get_setting('single-design-type') == '1' && ampforwp_get_setting('rp_design_type') == '3'){
+       if ( true == ampforwp_get_setting('ampforwp-single-related-posts-switch') && !checkAMPforPageBuilderStatus(get_the_ID()) ) {
+		$my_query = ampforwp_related_post_loop_query();
+	  	if( $my_query->have_posts() ) { $r_count = 1;?>
+	  	<div class="srp">
+	  		<div class="cntr">
+	  		<?php ampforwp_related_post(); ?>
+	            <amp-carousel height="310" layout="fixed-height" type="carousel">
+			        <?php
+			          $current_id = ampforwp_get_the_ID();
+			          while( $my_query->have_posts() ) {
+			            $my_query->the_post();
+			           if(ampforwp_get_the_ID()==$current_id){
+			            	continue;
+			            } 
+			        ?>
+			        <li class="<?php if ( has_post_thumbnail() ) { echo'has_thumbnail'; } else { echo 'no_thumbnail'; } ?>">
+			        	<div class="rp-slide">
+			        	<?php if ( true == ampforwp_get_setting('ampforwp-single-related-posts-image') ) { if(ampforwp_has_post_thumbnail()){?>
+				            <div class="rlp-image">     
+				                 <?php 
+				                $r_width = 346;
+								$r_height = 188;
+								if ( ampforwp_get_setting('ampforwp-single-related-posts-change-image-size') &&  ampforwp_get_setting('ampforwp-single-related-posts-image-width') && ampforwp_get_setting('ampforwp-single-related-posts-image-height')) {
+										$r_width = ampforwp_get_setting('ampforwp-single-related-posts-image-width');
+										$r_height = ampforwp_get_setting('ampforwp-single-related-posts-image-height');
+									}
+				                 ampforwp_get_relatedpost_image('full',array('image_crop'=>'true','image_crop_width'=>esc_attr($r_width),'image_crop_height'=>esc_attr($r_height)) );?>
+							</div>
+						<?php } } ?>	
+							<div class="rlp-cnt">
+								<?php 
+								$show_excerpt_opt = ampforwp_get_setting('ampforwp-single-related-posts-excerpt');
+								$argsdata = array(
+										'show_author' => false,
+										'read_more' => false,
+										'show_excerpt' => $show_excerpt_opt
+											);
+								ampforwp_get_relatedpost_content($argsdata); ?> 
+					        </div>
+				    	</div>
+			        </li><?php
+	            			do_action('ampforwp_between_related_post',$r_count);
+	     							 $r_count++;
+			        }
+			      } ?>
+				</amp-carousel>
+			</div>
+		</div>
+		<?php do_action('ampforwp_below_related_post'); ?>
+	<?php wp_reset_postdata(); }  } ?>	
+<?php if(ampforwp_get_setting('single-design-type') == true && ampforwp_get_setting('ampforwp-swift-recent-posts')=='1' && !checkAMPforPageBuilderStatus(get_the_ID()) ) { ?>
+	<div class="r-pf">
+		<div class="cntr">
+		<?php 	
+			$args = array(
+				'posts_per_page' => 2,
+				'fields' => 'ids',
+			);
+		$results = get_posts($args);
+ 		$check_rp= count($results);
+		if ($check_rp > 1) {?>
+			<h3><?php 
+			if (function_exists('pll__')) {
+				//phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+				echo pll__(esc_html( ampforwp_get_setting('amp-translator-recent-text')));
+			}else {
+				echo esc_html(ampforwp_translation(ampforwp_get_setting('amp-translator-recent-text'), 'Recent Posts' ));
+			}?></h3>
+		<?php }
+		$number_of_posts = 6;
+		$rcp = ampforwp_get_setting('ampforwp-number-of-recent-posts');
+		if( !empty($rcp) ){
+			$number_of_posts = (int) ampforwp_get_setting('ampforwp-number-of-recent-posts');
+		}
+		while( amp_loop('start', array( 'posts_per_page' => $number_of_posts ) ) ): ?>
+			<div class="fsp">
+				<?php if( ampforwp_has_post_thumbnail() ){
+					$width 	= 346;
+					$height = 188;
+					if( true == $redux_builder_amp['ampforwp-homepage-posts-image-modify-size'] ){
+						$width 	= $redux_builder_amp['ampforwp-swift-homepage-posts-width'];
+						$height = $redux_builder_amp['ampforwp-swift-homepage-posts-height'];
+					}
+					$args = array("tag"=>'div',"tag_class"=>'image-container','image_size'=>'full','image_crop'=>'true','image_crop_width'=>$width,'image_crop_height'=>$height, 'responsive'=> true); ?>
+					<?php if( ampforwp_get_setting('amforwp-recentpost-image-switch') == true){?>
+				    <div class="fsp-img">
+				    	<?php amp_loop_image($args); ?>
+				    </div>
+				<?php } ?>
+			    <?php } ?>
+			    <div class="fsp-cnt">
+			    	<?php amp_loop_category(); ?>
+				   	<?php amp_loop_title(); ?>
+				    <?php if( true == ampforwp_get_setting('amforwp-recentpost-excerpt-switch') ){
+				   				$excep_len = 15;
+                                if(ampforwp_get_setting('amp-swift-recentpost-excerpt-len') && is_numeric(ampforwp_get_setting('amp-swift-recentpost-excerpt-len'))){
+                                    $excep_len = intval(ampforwp_get_setting('amp-swift-recentpost-excerpt-len'));
+                                }
+                                amp_loop_excerpt($excep_len);
+				   			}
+				   		if( true == ampforwp_get_setting('amforwp-recentpost-date-switch')){ ?>
+					    <div class="pt-dt">
+					    	<?php amp_loop_date(); ?>
+					    </div>
+				<?php }?>
+			    </div>
+			</div>
+		<?php endwhile; amp_loop('end');  ?>
+		</div>
 	</div>
+<?php } // Recent Posts End Here ?>
 </div>
-</div>
-<?php } ?>
-<?php if($redux_builder_amp['single-design-type'] == '4'){?>
-	<div class="sp sgl">
+<?php } // Single Design 1 ends here  ?>
+<?php if($redux_builder_amp['single-design-type'] == '4'){ ?>
+<div class="sp sgl">
 	<div class="cntr">
 		<div class="sp-wrap">
 			<div class="sp-artl">
@@ -273,155 +367,67 @@ do_action("ampforwp_single_design_type_handle");
 						<?php amp_title(); ?>
 						<?php if( true == $redux_builder_amp['enable-excerpt-single'] ){ ?>
 							<div class="tl-exc">
-							   <?php amp_excerpt(20); ?>
+							   <?php amp_excerpt(); ?>
 						    </div>
 						<?php } ?>
-						<?php if ( isset($redux_builder_amp['swift-featued-image']) && $redux_builder_amp['swift-featued-image'] && ampforwp_has_post_thumbnail() ) { ?>
+						<?php 
+					   	if($paged==0 && $page==0){
+					   		if ( ampforwp_get_setting('swift-featued-image') && ampforwp_has_post_thumbnail() ) { ?>
 							<div class="sf-img">
 								<?php amp_featured_image();?>
 							</div>
 						<?php }
+						}
 					}?>
 					<div class="sp-cnt">
 						<div class="sp-rl">
 							<div class="sp-rt">
+							<?php if (true == ampforwp_get_setting('swift-social-position') && 'above-content' == ampforwp_get_setting('swift-social-position')){
+								ampforwp_swift_social_icons(); 
+							}?>
 								<div class="cntn-wrp artl-cnt">
-									<?php amp_content(); ?>
+									<?php 
+									if ( 'above-content' ==  ampforwp_get_setting('swift-layout-addthis-pos') ){
+										ampforwp_addthis_support(); 
+									} ?>
+									<?php amp_content(); 
+									if ( 'below-content' ==  ampforwp_get_setting('swift-layout-addthis-pos') ){
+											ampforwp_addthis_support();
+									}	?>
 								</div>
+								<?php do_action( 'ampforwp_after_the_post_content_wrp' ); ?>
 								<?php if( !checkAMPforPageBuilderStatus(get_the_ID()) ) { ?>
 								<div class="ss-ic">
-									<span class="shr-txt"><?php echo ampforwp_translation($redux_builder_amp['amp-translator-share-text'], 'Share' ); ?></span>
-									<ul>
-										<?php if($redux_builder_amp['enable-single-facebook-share']){?>
-										<li>
-											<a class="s_fb" target="_blank" href="https://www.facebook.com/sharer.php?u=<?php the_permalink(); ?>"></a>
-										</li>
-										<?php } ?>
-										<?php if($redux_builder_amp['enable-single-twitter-share']){?>
-										<li>
-											<a class="s_tw" target="_blank" href="https://twitter.com/intent/tweet?url=<?php the_permalink(); ?>&text=<?php echo esc_attr(htmlspecialchars(get_the_title())); ?>">
-											</a>
-										</li>
-										<?php } ?>
-										<?php if($redux_builder_amp['enable-single-gplus-share']){?>
-										<li>
-											<a class="s_gp" target="_blank" href="https://plus.google.com/share?url=<?php the_permalink(); ?>"></a>
-										</li>
-										<?php } ?>
-										<?php if($redux_builder_amp['enable-single-email-share']){?>
-										<li>
-											<a class="s_em" target="_blank" href="mailto:?subject=<?php echo esc_attr(htmlspecialchars(get_the_title())); ?>&body=<?php the_permalink(); ?>"></a>
-										</li>
-										<?php } ?>
-										<?php if($redux_builder_amp['enable-single-pinterest-share']){
-											$image = '';
-											if (ampforwp_has_post_thumbnail( ) ){
-				 								$image = ampforwp_get_post_thumbnail( 'url', 'full' );
-				 							}?>
-										<li>
-											<a class="s_pt" target="_blank" href="https://pinterest.com/pin/create/button/?media=<?php echo esc_url($image); ?>&url=<?php esc_url(the_permalink()); ?>&description=<?php echo esc_attr(htmlspecialchars(get_the_title())); ?>"></a>
-										</li>
-										<?php } ?>
-										<?php if($redux_builder_amp['enable-single-linkedin-share']){?>
-										<li>
-											<a class="s_lk" target="_blank" href="https://www.linkedin.com/shareArticle?url=<?php the_permalink(); ?>&title=<?php echo esc_attr(htmlspecialchars(get_the_title())); ?>"></a>
-										</li>
-										<?php } ?>
-										<?php if($redux_builder_amp['enable-single-whatsapp-share']){?>
-										<li>
-											<a class="s_wp" target="_blank" href="whatsapp://send?text=<?php the_permalink(); ?>" data-action="share/whatsapp/share"></a>
-										</li>
-										<?php } ?>
-										<?php if($redux_builder_amp['enable-single-vk-share']){?>
-										<li>
-											<a class="s_vk" target="_blank" href="http://vk.com/share.php?url=<?php the_permalink(); ?>"></a>
-										</li>
-										<?php } ?>
-										<?php if($redux_builder_amp['enable-single-odnoklassniki-share']){?>
-										<li>
-											<a class="s_od" target="_blank" href="https://ok.ru/dk?st.cmd=addShare&st._surl=<?php the_permalink(); ?>"></a>
-										</li>
-										<?php } ?>
-										<?php if($redux_builder_amp['enable-single-reddit-share']){?>
-										<li>
-											<a class="s_rd" target="_blank" href="https://reddit.com/submit?url=<?php the_permalink(); ?>&title=<?php echo esc_attr(htmlspecialchars(get_the_title())); ?>"></a>
-										</li>
-										<?php } ?>
-										<?php if($redux_builder_amp['enable-single-tumblr-share']){?>
-										<li>
-											<a class="s_tb" target="_blank" href="https://www.tumblr.com/widgets/share/tool?canonicalUrl=<?php the_permalink(); ?>"></a>
-										</li>
-										<?php } ?>
-										<?php if($redux_builder_amp['enable-single-telegram-share']){?>
-										<li>
-											<a class="s_tg" target="_blank" href="https://telegram.me/share/url?url=<?php the_permalink(); ?>&text=<?php echo esc_attr(htmlspecialchars(get_the_title())); ?>"></a>
-										</li>
-										<?php } ?>
-										<?php if($redux_builder_amp['enable-single-digg-share']){?>
-										<li>
-											<a class="s_dg" target="_blank" href="http://digg.com/submit?url=<?php the_permalink(); ?>&title=<?php echo esc_attr(htmlspecialchars(get_the_title())); ?>"></a>
-										</li>
-										<?php } ?>
-										<?php if($redux_builder_amp['enable-single-stumbleupon-share']){?>
-										<li>
-											<a class="s_su" target="_blank" href="http://www.stumbleupon.com/submit?url=<?php the_permalink(); ?>&title=<?php echo esc_attr(htmlspecialchars(get_the_title())); ?>"></a>
-										</li>
-										<?php } ?>
-										<?php if($redux_builder_amp['enable-single-wechat-share']){?>
-										<li>
-											<a class="s_wc" target="_blank" href="http://api.addthis.com/oexchange/0.8/forward/wechat/offer?url=<?php the_permalink(); ?>"></a>
-										</li>
-										<?php } ?>
-										<?php if($redux_builder_amp['enable-single-viber-share']){?>
-										<li>
-											<a class="s_vb" target="_blank" href="viber://forward?text=<?php the_permalink(); ?>"></a>
-										</li>
-										<?php } ?>
-										<?php if ( isset($redux_builder_amp['enable-single-hatena-bookmarks']) && $redux_builder_amp['enable-single-hatena-bookmarks']){?>
-							<li>
-								<a class="s_hb" target="_blank" href="http://b.hatena.ne.jp/entry/<?php the_permalink(); ?>&title=<?php echo esc_attr(htmlspecialchars(get_the_title())); ?>"></a>
-							</li>
-							<?php } ?>
-							<?php if ( isset($redux_builder_amp['enable-single-pocket-share']) && $redux_builder_amp['enable-single-pocket-share']){?>
-							<li>
-								<a class="s_pk" target="_blank" href="https://getpocket.com/save?url=<?php the_permalink(); ?>&title=<?php echo esc_attr(htmlspecialchars(get_the_title())); ?>"></a>
-							</li>
-							<?php } ?>
-										<?php if ( isset($redux_builder_amp['enable-single-yummly-share']) && $redux_builder_amp['enable-single-yummly-share']){?>
-										<li>
-											<a class="s_ym" target="_blank" href="http://www.yummly.com/urb/verify?url=<?php the_permalink(); ?>&title=<?php echo esc_attr(htmlspecialchars(get_the_title())); ?>&yumtype=button"></a>
-										</li>
-										<?php } ?>
-										<?php if($redux_builder_amp['ampforwp-facebook-like-button']){?>
-										<li>
-											<amp-facebook-like width=90 height=28
-							 					layout="fixed"
-							 					data-size="large"
-							    				data-layout="button_count"
-							    				data-href="<?php echo esc_url(get_the_permalink());?>">
-											</amp-facebook-like>
-										</li>
-										<?php } ?>
-
-									</ul>
+								<?php if (true == ampforwp_get_setting('swift-social-position') && 'below-content' == ampforwp_get_setting('swift-social-position')){
+									ampforwp_swift_social_icons(); 
+								}?>
 					            </div>
 					            <?php if( true == $redux_builder_amp['ampforwp-tags-single'] && amp_tags_list()){ ?>
 						            <div class="tags">
 						            	<?php amp_tags_list();?>
 						            </div>
-					            <?php } 
-					            if( true == $redux_builder_amp['swift-date'] ) { ?>
+					            <?php }
+					            if ( ampforwp_post_has_custom_taxonomies() ) { ?>
+						            <div class="tags ampforwp-custom-taxonomies">
+						            	<?php ampforwp_display_custom_taxonomies( null, array( 'wrapper_class' => 'amp-tags', 'term_prefix' => 'amp-tag-' ) ); ?>
+						            </div>
+					            <?php }
+					             if( true == ampforwp_get_setting('swift-date') ) { ?>
 						            <div class="post-date">
 						            	<?php amp_date(); ?><?php edit_post_link(); ?>
 						            </div>
 					            <?php }
-					             if( $redux_builder_amp['amp-author-description'] ) { ?>
-									<?php amp_author_box( 
-										array(	'avatar'=>true,
-												'avatar_size'=>60,
-												'author_description'=>true,
-												'ads_below_the_author'=>true)
-										); ?>
+					             $author_box = array();
+					              if( true == ampforwp_get_setting('amp-author-description') ) { ?>
+									<?php
+									$author_box = array( 'avatar'=>true,
+													'avatar_size'=>60,	
+													'author_description'=>true,	
+													'ads_below_the_author'=>true);
+								if( true == ampforwp_get_setting('amp-author-bio-name')){
+									$author_box['author_pub_name'] = true;
+								}
+								amp_author_box( $author_box );?>
 								<?php } ?>
 								<?php amp_post_navigation();?>
 								<div class="cmts">
@@ -430,25 +436,39 @@ do_action("ampforwp_single_design_type_handle");
 								</div>
 					            <?php
 					            if ( isset($redux_builder_amp['ampforwp-single-related-posts-switch']) && $redux_builder_amp['ampforwp-single-related-posts-switch'] ) {
-								$my_query = related_post_loop_query();
+								$my_query = ampforwp_related_post_loop_query();
 							  	if( $my_query->have_posts() ) { $r_count = 1;?>
 							  	<div class="srp">
 							  		<?php ampforwp_related_post(); ?>
 						            <ul class="clearfix">
 								        <?php
+								          $current_id = ampforwp_get_the_ID();
 								          while( $my_query->have_posts() ) {
 								            $my_query->the_post();
+								          if(ampforwp_get_the_ID()==$current_id){
+								            continue;
+								           } 
 								        ?>
 								        <li class="<?php if ( has_post_thumbnail() ) { echo'has_thumbnail'; } else { echo 'no_thumbnail'; } ?>">
 								        	<?php if ( true == $redux_builder_amp['ampforwp-single-related-posts-image'] ) { ?>
 									            <div class="rlp-image">     
-									                 <?php ampforwp_get_relatedpost_image('full',array('image_crop'=>'true','image_crop_width'=>220,'image_crop_height'=>134) );?>
+									                <?php 
+											            $r_width = 346;
+														$r_height = 188;
+													if ( ampforwp_get_setting('ampforwp-single-related-posts-change-image-size') &&  ampforwp_get_setting('ampforwp-single-related-posts-image-width') && ampforwp_get_setting('ampforwp-single-related-posts-image-height')) {
+															$r_width = ampforwp_get_setting('ampforwp-single-related-posts-image-width');
+															$r_height = ampforwp_get_setting('ampforwp-single-related-posts-image-height');
+														}
+											             ampforwp_get_relatedpost_image('full',array('image_crop'=>'true','image_crop_width'=>esc_attr($r_width),'image_crop_height'=>esc_attr($r_height)) );?>
 												</div>
 											<?php } ?>	
 											<div class="rlp-cnt">
-												<?php $argsdata = array(
+												<?php 
+												$show_excerpt_opt = $redux_builder_amp['ampforwp-single-related-posts-excerpt'];
+
+												$argsdata = array(
 														'show_author' => false,
-														'show_excerpt' =>false
+														'show_excerpt' => $show_excerpt_opt
 															);
 												ampforwp_get_relatedpost_content($argsdata); ?> 
 									        </div>
@@ -456,18 +476,26 @@ do_action("ampforwp_single_design_type_handle");
 						            			do_action('ampforwp_between_related_post',$r_count);
 			                 							 $r_count++;
 								        }
-								      } ?>
+								       ?>
 				      				</ul>
 				      			</div>
-					            <?php wp_reset_postdata(); } 
+					            <?php }
+					            wp_reset_postdata(); } 
 					        	} ?>
 							</div><!-- /.sp-rt -->
 					    </div><!-- /.sp-rl -->
 					</div><!-- /.sp-cntn -->
-					<?php if( $redux_builder_amp['single-design-type'] == '4' && isset($redux_builder_amp['ampforwp-swift-recent-posts']) && $redux_builder_amp['ampforwp-swift-recent-posts']=='1' && !checkAMPforPageBuilderStatus(get_the_ID()) ) {?>
+					<?php if( $redux_builder_amp['single-design-type'] == '4' && ampforwp_get_setting('ampforwp-swift-recent-posts')=='1' && !checkAMPforPageBuilderStatus(get_the_ID()) ) {?>
 					<div class="r-pf">
-						<h3><?php echo ampforwp_translation($redux_builder_amp['amp-translator-recent-text'], 'Recent Posts' ); ?></h3>
-						<?php while( amp_loop('start', array( 'posts_per_page' => 6 ) ) ): ?>
+						<h3>
+							<?php echo esc_attr(ampforwp_translation($redux_builder_amp['amp-translator-recent-text'], 'Recent Posts' )); ?></h3>
+						<?php
+						$number_of_posts = 6;
+						$rcp = ampforwp_get_setting('ampforwp-number-of-recent-posts');
+						if( !empty($rcp) ){
+							$number_of_posts = (int) ampforwp_get_setting('ampforwp-number-of-recent-posts');
+						}
+						while( amp_loop('start', array( 'posts_per_page' => $number_of_posts ) ) ): ?>
 							<div class="fsp">
 								<?php
 								if(ampforwp_has_post_thumbnail()){
@@ -478,17 +506,25 @@ do_action("ampforwp_single_design_type_handle");
 										$height = $redux_builder_amp['ampforwp-swift-homepage-posts-height'];
 									} 
 									$args = array("tag"=>'div',"tag_class"=>'image-container','image_size'=>'full','image_crop'=>'true','image_crop_width'=>$width,'image_crop_height'=>$height, 'responsive'=> true); ?>
+									<?php 
+								if( ampforwp_get_setting('amforwp-recentpost-image-switch') == true){
+								?>
 								    <div class="fsp-img">
 								    	<?php amp_loop_image($args); ?>
 								    </div>
+								<?php } ?>
 							    <?php } ?>
 							    <div class="fsp-cnt">
 							    	<?php amp_loop_category(); ?>
 								    <?php amp_loop_title(); ?>
-								    <?php amp_loop_excerpt(20); ?>
-								    <div class="pt-dt">
-								    	<?php amp_loop_date(); ?>
-								    </div>
+								    <?php if( true == ampforwp_get_setting('amforwp-recentpost-excerpt-switch') ){
+							   				amp_loop_excerpt(20);
+							   			} ?>
+				<?php if( true == ampforwp_get_setting('amforwp-recentpost-date-switch')){?>
+							    <div class="pt-dt">
+							    	<?php amp_loop_date(); ?>
+							    </div>
+				<?php }?>
 							    </div>
 							</div>
 						<?php endwhile; amp_loop('end');  ?>
@@ -499,27 +535,13 @@ do_action("ampforwp_single_design_type_handle");
 				<?php if ( is_active_sidebar( 'swift-sidebar' ) ) : ?>
 				<div class="sdbr-right">
 					<?php 
-						ob_start();
-						dynamic_sidebar('swift-sidebar');
-						$swift_footer_widget = ob_get_contents();
-						ob_end_clean();
-						$sanitizer_obj = new AMPFORWP_Content( 
-											$swift_footer_widget,
-											array(), 
-											apply_filters( 'ampforwp_content_sanitizers', 
-												array( 'AMP_Img_Sanitizer' => array(), 
-													'AMP_Style_Sanitizer' => array(), 
-													'AMP_Blacklist_Sanitizer' => array(),
-													'AMP_Video_Sanitizer' => array(),
-							 						'AMP_Audio_Sanitizer' => array(),
-							 						'AMP_Iframe_Sanitizer' => array(
-														 'add_placeholder' => true,
-													 ),
-												) 
-											) 
-										);
-						 $sanitized_footer_widget =  $sanitizer_obj->get_amp_content();
-			              echo $sanitized_footer_widget;
+						$sanitized_sidebar = ampforwp_sidebar_content_sanitizer('swift-sidebar');
+						$sidebar_output = '';
+						if ( $sanitized_sidebar) {
+							$sidebar_output = $sanitized_sidebar->get_amp_content();
+							$sidebar_output = apply_filters('ampforwp_modify_sidebars_content',$sidebar_output);
+						}
+			            echo do_shortcode($sidebar_output); // amphtml content, no kses
 					?>
 				</div>
 			<?php endif; ?>
@@ -527,9 +549,7 @@ do_action("ampforwp_single_design_type_handle");
 			</div><!-- /.sp-artl -->
 		</div><!-- /.sp-wrap -->
 	</div><!-- /.container -->
-<?php //} 
-do_action("ampforwp_single_design_type_handle");
-	?>
 </div>
 <?php }// New single desing Ends?>
+<?php do_action("ampforwp_single_design_type_handle"); ?>
 	<?php amp_footer()?>

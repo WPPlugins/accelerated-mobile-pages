@@ -1,5 +1,5 @@
 <?php
-
+namespace ReduxCore\ReduxFramework;
 // Exit if accessed directly
     if ( ! defined( 'ABSPATH' ) ) {
         exit;
@@ -14,7 +14,7 @@
              *
              * @since Redux_Options 1.0.0
              */
-            function __construct( $field = array(), $value = '', $parent ) {
+            function __construct( $field = array(), $value = '', $parent = ' ' ) {
                 $this->parent = $parent;
                 $this->field  = $field;
                 $this->value  = $value;
@@ -90,6 +90,7 @@
                 }
 
                 $sortlists = $this->value;
+                
                 if ( ! empty( $sortlists ) ) {
                     foreach ( $sortlists as $section => $arr ) {
                         $sortlists[ $section ] = $this->replace_id_with_slug( $arr );
@@ -142,7 +143,7 @@
 
                     if ( $sortlists ) {
                         echo '<fieldset id="' . esc_attr($this->field['id']) . '" class="redux-sorter-container redux-sorter">';
-
+                        
                         foreach ( $sortlists as $group => $sortlist ) {
                             $filled = "";
 
@@ -158,7 +159,7 @@
                             }
 
                             foreach ( $sortlist as $key => $list ) {
-
+/* phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped */
                                 echo '<input class="sorter-placebo" type="hidden" name="' . esc_attr($this->field['name']) . '[' . $group . '][placebo]' . esc_attr($this->field['name_suffix']) . '" value="placebo">';
 
                                 if ( $key != "placebo" ) {

@@ -1,5 +1,5 @@
 <?php
-
+namespace ReduxCore\ReduxFramework;
 // Exit if accessed directly
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
@@ -14,7 +14,7 @@ if ( ! class_exists( 'ReduxFramework_spinner' ) ) {
          *
          * @since ReduxFramework 3.0.0
          */
-        function __construct( $field = array(), $value = '', $parent ) {
+        function __construct( $field = array(), $value = '', $parent = ' ' ) {
             $this->parent = $parent;
             $this->field  = $field;
             $this->value  = $value;
@@ -51,8 +51,9 @@ if ( ! class_exists( 'ReduxFramework_spinner' ) ) {
                 $readonly = ' readonly="readonly"';
             }
 
-
+  /* phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped, WordPress.Security.EscapeOutput.OutputNotEscaped */
             echo '<div id="' . $this->field['id'] . '-spinner" class="redux_spinner" rel="' . $this->field['id'] . '">';
+            /* phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped, WordPress.Security.EscapeOutput.OutputNotEscaped, WordPress.Security.EscapeOutput.OutputNotEscaped, WordPress.Security.EscapeOutput.OutputNotEscaped, WordPress.Security.EscapeOutput.OutputNotEscaped, WordPress.Security.EscapeOutput.OutputNotEscaped, WordPress.Security.EscapeOutput.OutputNotEscaped */
             echo '<input type="text" '.$data_string.' name="' . $this->field['name'] . $this->field['name_suffix'] . '" id="' . $this->field['id'] . '" value="' . $this->value . '" class="mini spinner-input ' . $this->field['class'] . '"' . $readonly . '/>';
             echo '</div>';
         } //function

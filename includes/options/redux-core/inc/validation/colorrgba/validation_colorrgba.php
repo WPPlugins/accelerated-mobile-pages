@@ -1,5 +1,7 @@
 <?php
-
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
     if ( ! class_exists( 'Redux_Validation_colorrgba' ) ) {
         class Redux_Validation_colorrgba {
 
@@ -13,7 +15,7 @@
 
                 $this->parent       = $parent;
                 $this->field        = $field;
-                $this->field['msg'] = ( isset( $this->field['msg'] ) ) ? $this->field['msg'] : __( 'This field must be a valid color value.', 'redux-framework' );
+                $this->field['msg'] = ( isset( $this->field['msg'] ) ) ? $this->field['msg'] : __( 'This field must be a valid color value.', 'accelerated-mobile-pages' );
                 $this->value        = $value;
                 $this->current      = $current;
                 //$this->validate();

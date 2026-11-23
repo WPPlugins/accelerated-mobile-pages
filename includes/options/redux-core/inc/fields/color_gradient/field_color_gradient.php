@@ -1,5 +1,5 @@
 <?php
-
+namespace ReduxCore\ReduxFramework;
 /**
  * Redux Framework is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Don't duplicate me!
-if ( ! class_exists( 'ReduxFramework_color_gradient' ) ) {
+if ( ! class_exists( 'ReduxCore\\ReduxFramework\\ReduxFramework_color_gradient' ) ) {
 
     /**
      * Main ReduxFramework_color_gradient class
@@ -41,7 +41,7 @@ if ( ! class_exists( 'ReduxFramework_color_gradient' ) ) {
          * @access      public
          * @return      void
          */
-        function __construct( $field = array(), $value = '', $parent ) {
+        function __construct( $field = array(), $value = '', $parent = ' ' ) {
             $this->parent = $parent;
             $this->field  = $field;
             $this->value  = $value;
@@ -65,9 +65,9 @@ if ( ! class_exists( 'ReduxFramework_color_gradient' ) ) {
 
             $this->value = wp_parse_args( $this->value, $defaults );
 
-            echo '<div class="colorGradient"><strong>' . __( 'From ', 'redux-framework' ) . '</strong>&nbsp;';
-            echo '<input data-id="' . $this->field['id'] . '" id="' . $this->field['id'] . '-from" name="' . $this->field['name'] . $this->field['name_suffix'] . '[from]' . '" value="' . $this->value['from'] . '" class="redux-color redux-color-init ' . $this->field['class'] . '"  type="text" data-default-color="' . $this->field['default']['from'] . '" />';
-            echo '<input type="hidden" class="redux-saved-color" id="' . $this->field['id'] . '-saved-color' . '" value="">';
+            echo '<div class="colorGradient"><strong>' . esc_html__( 'From ', 'accelerated-mobile-pages' ) . '</strong>&nbsp;';
+            echo '<input data-id="' . esc_attr( $this->field['id'] ). '" id="' . esc_attr( $this->field['id']) . '-from" name="' . esc_attr( $this->field['name'] ). esc_attr( $this->field['name_suffix']) . '[from]' . '" value="' . esc_attr( $this->value['from'] ). '" class="redux-color redux-color-init ' . esc_attr( $this->field['class'] ). '"  type="text" data-default-color="' . esc_attr( $this->field['default']['from'] ). '" />';
+            echo '<input type="hidden" class="redux-saved-color" id="' . esc_attr( $this->field['id']) . '-saved-color' . '" value="">';
 
             if ( ! isset( $this->field['transparent'] ) || $this->field['transparent'] !== false ) {
                 $tChecked = "";
@@ -76,10 +76,10 @@ if ( ! class_exists( 'ReduxFramework_color_gradient' ) ) {
                     $tChecked = ' checked="checked"';
                 }
 
-                echo '<label for="' . $this->field['id'] . '-from-transparency" class="color-transparency-check"><input type="checkbox" class="checkbox color-transparency ' . $this->field['class'] . '" id="' . $this->field['id'] . '-from-transparency" data-id="' . $this->field['id'] . '-from" value="1"' . $tChecked . '> ' . __( 'Transparent', 'redux-framework' ) . '</label>';
+                echo '<label for="' . esc_attr( $this->field['id'] ). '-from-transparency" class="color-transparency-check"><input type="checkbox" class="checkbox color-transparency ' . esc_attr( $this->field['class']) . '" id="' . esc_attr( $this->field['id']) . '-from-transparency" data-id="' . esc_attr( $this->field['id']) . '-from" value="1"' . esc_attr( $tChecked ). '> ' . esc_html__( 'Transparent', 'accelerated-mobile-pages' ) . '</label>';
             }
             echo "</div>";
-            echo '<div class="colorGradient toLabel"><strong>' . __( 'To ', 'redux-framework' ) . '</strong>&nbsp;<input data-id="' . $this->field['id'] . '" id="' . $this->field['id'] . '-to" name="' . $this->field['name'] . $this->field['name_suffix'] . '[to]' . '" value="' . $this->value['to'] . '" class="redux-color redux-color-init ' . $this->field['class'] . '"  type="text" data-default-color="' . $this->field['default']['to'] . '" />';
+            echo '<div class="colorGradient toLabel"><strong>' . esc_html__( 'To ', 'accelerated-mobile-pages' ) . '</strong>&nbsp;<input data-id="' . esc_attr( $this->field['id']) . '" id="' . esc_attr( $this->field['id'] ). '-to" name="' . esc_attr( $this->field['name']) . esc_attr( $this->field['name_suffix']) . '[to]' . '" value="' . esc_attr( $this->value['to']) . '" class="redux-color redux-color-init ' . esc_attr( $this->field['class']) . '"  type="text" data-default-color="' . esc_attr( $this->field['default']['to']) . '" />';
 
             if ( ! isset( $this->field['transparent'] ) || $this->field['transparent'] !== false ) {
                 $tChecked = "";
@@ -88,7 +88,7 @@ if ( ! class_exists( 'ReduxFramework_color_gradient' ) ) {
                     $tChecked = ' checked="checked"';
                 }
 
-                echo '<label for="' . $this->field['id'] . '-to-transparency" class="color-transparency-check"><input type="checkbox" class="checkbox color-transparency" id="' . $this->field['id'] . '-to-transparency" data-id="' . $this->field['id'] . '-to" value="1"' . $tChecked . '> ' . __( 'Transparent', 'redux-framework' ) . '</label>';
+                echo '<label for="' . esc_attr( $this->field['id'] ). '-to-transparency" class="color-transparency-check"><input type="checkbox" class="checkbox color-transparency" id="' . esc_attr( $this->field['id'] ). '-to-transparency" data-id="' . esc_attr( $this->field['id'] ) . '-to" value="1"' . esc_attr( $tChecked ). '> ' . esc_html__( 'Transparent', 'accelerated-mobile-pages' ) . '</label>';
             }
             echo "</div>";
         }

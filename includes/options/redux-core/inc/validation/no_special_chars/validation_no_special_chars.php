@@ -1,5 +1,7 @@
 <?php
-
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
     if ( ! class_exists( 'Redux_Validation_no_special_chars' ) ) {
         class Redux_Validation_no_special_chars {
 
@@ -13,7 +15,7 @@
 
                 $this->parent       = $parent;
                 $this->field        = $field;
-                $this->field['msg'] = ( isset( $this->field['msg'] ) ) ? $this->field['msg'] : __( 'You must not enter any special characters in this field, all special characters have been removed.', 'redux-framework' );
+                $this->field['msg'] = ( isset( $this->field['msg'] ) ) ? $this->field['msg'] : __( 'You must not enter any special characters in this field, all special characters have been removed.', 'accelerated-mobile-pages' );
                 $this->value        = $value;
                 $this->current      = $current;
 

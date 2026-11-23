@@ -1,7 +1,10 @@
 <?php
-
-    if ( ! class_exists( 'Redux_Customizer_Control' ) ) {
-        class Redux_Customizer_Control extends WP_Customize_Control {
+namespace ReduxCore\ReduxFramework;
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+    if ( ! class_exists( 'ReduxCore\\ReduxFramework\\Redux_Customizer_Control' ) ) {
+        class Redux_Customizer_Control extends \WP_Customize_Control {
 
             public function render() {
                 $this->redux_id = str_replace( 'customize-control-', '', 'customize-control-' . str_replace( '[', '-', str_replace( ']', '', $this->id ) ) );
@@ -13,7 +16,7 @@
                     <?php if ( $this->type != "repeater" ): ?>
                         <input type="hidden"
                             data-id="<?php echo esc_attr( $this->id ); ?>"
-                            data-key="<?php echo str_replace( $opt_name . '-', '', $this->redux_id ); ?>"
+                            data-key="<?php /* phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped */ echo str_replace( $opt_name . '-', '', $this->redux_id ); ?>"
                             class="redux-customizer-input"
                             id="customizer_control_id_<?php echo esc_attr( $this->redux_id ); ?>" <?php echo esc_url( $this->link() ) ?>
                             value=""/>
@@ -30,12 +33,14 @@
 
             public function label() {
                 // The label has already been sanitized in the Fields class, no need to re-sanitize it.
+                /* phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped */
                 echo $this->label;
             }
 
             public function description() {
                 if ( ! empty( $this->description ) ) {
                     // The description has already been sanitized in the Fields class, no need to re-sanitize it.
+                    /* phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped */
                     echo '<span class="description customize-control-description">' . $this->description . '</span>';
                 }
             }

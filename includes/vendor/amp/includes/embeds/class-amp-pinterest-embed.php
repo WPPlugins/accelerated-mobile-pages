@@ -1,6 +1,9 @@
 <?php
-
-require_once( AMP__DIR__ . '/includes/embeds/class-amp-base-embed-handler.php');
+namespace AMPforWP\AMPVendor;
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+require_once( AMP__VENDOR__DIR__ . '/includes/embeds/class-amp-base-embed-handler.php');
 
 class AMP_Pinterest_Embed_Handler extends AMP_Base_Embed_Handler {
 

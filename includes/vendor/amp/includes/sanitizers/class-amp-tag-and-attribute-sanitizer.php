@@ -1,6 +1,13 @@
 <?php
+namespace AMPforWP\AMPVendor;
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
 /**
  * Class AMP_Tag_And_Attribute_Sanitizer
+ *
+ * 
+ * Also referred to the "Validating Sanitizer".
  *
  * @package AMP
  */
@@ -203,11 +210,24 @@ class AMP_Tag_And_Attribute_Sanitizer extends AMP_Base_Sanitizer {
 	public function get_scripts() {
 		$scriptArray = array_fill_keys( $this->script_components, true );
 		foreach ( $scriptArray as $ext_key=>$ext_value ) {
+			$version = 'latest';
+			if ('amp-auto-ads' == $ext_key  || 'amp-ad' == $ext_key  ) {
+				$version = '0.1';
+			}
+			if ( 'amp-carousel' == $ext_key){
+				$version = '0.2';
+			}
 			$scriptArray[$ext_key] = sprintf(
 				'https://cdn.ampproject.org/v0/%s-%s.js',
 				$ext_key,
-				'latest'
+				$version
 			);
+		}
+		$present_scripts = array_flip($scriptArray);
+		$checking_scripts = array("amp-accordion","amp-carousel");
+		$script_intersect = array_intersect($checking_scripts,$present_scripts);
+		if(count($script_intersect)>0){
+			remove_filter('the_content', 'wpautop');
 		}
 		return $scriptArray;
 	}
@@ -428,7 +448,7 @@ class AMP_Tag_And_Attribute_Sanitizer extends AMP_Base_Sanitizer {
 		}
 
 		// Remove element if it has illegal CDATA.
-		if ( ! empty( $cdata ) && $node instanceof DOMElement ) {
+		if ( ! empty( $cdata ) && $node instanceof \DOMElement ) {
 			$validity = $this->validate_cdata_for_node( $node, $cdata );
 			if ( is_wp_error( $validity ) ) {
 				$this->remove_node( $node );
@@ -468,7 +488,7 @@ class AMP_Tag_And_Attribute_Sanitizer extends AMP_Base_Sanitizer {
 			}
 
 			// Check if element needs amp-bind component.
-			if ( $node instanceof DOMElement && ! in_array( 'amp-bind', $this->script_components, true ) ) {
+			if ( $node instanceof \DOMElement && ! in_array( 'amp-bind', $this->script_components, true ) ) {
 				foreach ( $node->attributes as $name => $value ) {
 					$is_bind_attribute = (
 						'[' === $name[0]
@@ -531,7 +551,7 @@ class AMP_Tag_And_Attribute_Sanitizer extends AMP_Base_Sanitizer {
 	private function validate_cdata_for_node( $element, $cdata_spec ) {
 		if ( isset( $cdata_spec['blacklisted_cdata_regex'] ) ) {
 			if ( preg_match( '@' . $cdata_spec['blacklisted_cdata_regex']['regex'] . '@u', $element->textContent ) ) {
-				return new WP_Error( $cdata_spec['blacklisted_cdata_regex']['error_message'] );
+				return new \WP_Error( $cdata_spec['blacklisted_cdata_regex']['error_message'] );
 			}
 		}
 		return true;
@@ -603,7 +623,7 @@ class AMP_Tag_And_Attribute_Sanitizer extends AMP_Base_Sanitizer {
 			return 0.5;
 		}
 
-		if ( ! $node instanceof DOMElement ) {
+		if ( ! $node instanceof \DOMElement ) {
 			/*
 			 * A DOMNode is not valid for checks so might
 			 * as well bail here is not an DOMElement.
@@ -815,7 +835,7 @@ class AMP_Tag_And_Attribute_Sanitizer extends AMP_Base_Sanitizer {
 	 */
 	private function get_disallowed_attributes_in_node( $node, $attr_spec_list ) {
 
-		if ( ! $node instanceof DOMElement ) {
+		if ( ! $node instanceof \DOMElement ) {
 			/**
 			 * If $node is only a DOMNode and not a DOMElement we can't
 			 * remove an attribute from it anyway.  So bail out now.
@@ -831,6 +851,9 @@ class AMP_Tag_And_Attribute_Sanitizer extends AMP_Base_Sanitizer {
 		$attrs_to_remove = array();
 		foreach ( $node->attributes as $attr_name => $attr_node ) {
 			if ( ! $this->is_amp_allowed_attribute( $attr_name, $attr_spec_list ) ) {
+				$attrs_to_remove[] = $attr_node;
+			}elseif( $node->tagName == 'table' && $attr_name == 'height' ){
+				//Remove height from table
 				$attrs_to_remove[] = $attr_node;
 			}
 		}
@@ -850,7 +873,7 @@ class AMP_Tag_And_Attribute_Sanitizer extends AMP_Base_Sanitizer {
 	 */
 	private function sanitize_disallowed_attribute_values_in_node( $node, $attr_spec_list, $attributes_pending_removal ) {
 
-		if ( ! $node instanceof DOMElement ) {
+		if ( ! $node instanceof \DOMElement ) {
 			/*
 			 * If $node is only a DOMNode and not a DOMElement we can't
 			 * remove an attribute from it anyway.  So bail out now.
@@ -1074,10 +1097,11 @@ class AMP_Tag_And_Attribute_Sanitizer extends AMP_Base_Sanitizer {
 		 * Check 'value_casei' - case insensitive
 		 */
 		if ( isset( $attr_spec_rule[ AMP_Rule_Spec::VALUE_CASEI ] ) ) {
-			$rule_value = strtolower( $attr_spec_rule[ AMP_Rule_Spec::VALUE_CASEI ] );
+			
+			$rule_value = !is_array($attr_spec_rule[ AMP_Rule_Spec::VALUE_CASEI ])?strtolower( $attr_spec_rule[ AMP_Rule_Spec::VALUE_CASEI ] ):$attr_spec_rule[ AMP_Rule_Spec::VALUE_CASEI ];
 			if ( $node->hasAttribute( $attr_name ) ) {
 				$attr_value = strtolower( $node->getAttribute( $attr_name ) );
-				if ( $attr_value === (string) $rule_value ) {
+				if ( is_array($rule_value) && ( $attr_value === join($rule_value) ) ) {
 					return AMP_Rule_Spec::PASS;
 				} else {
 					return AMP_Rule_Spec::FAIL;
@@ -1086,7 +1110,7 @@ class AMP_Tag_And_Attribute_Sanitizer extends AMP_Base_Sanitizer {
 				foreach ( $attr_spec_rule[ AMP_Rule_Spec::ALTERNATIVE_NAMES ] as $alternative_name ) {
 					if ( $node->hasAttribute( $alternative_name ) ) {
 						$attr_value = strtolower( $node->getAttribute( $alternative_name ) );
-						if ( $attr_value === (string) $rule_value ) {
+						if ( is_array($rule_value) && ( $attr_value === join($rule_value) ) ) {
 							return AMP_Rule_Spec::PASS;
 						} else {
 							return AMP_Rule_Spec::FAIL;
@@ -1179,18 +1203,21 @@ class AMP_Tag_And_Attribute_Sanitizer extends AMP_Base_Sanitizer {
 	private function check_attr_spec_rule_valid_url( $node, $attr_name, $attr_spec_rule ) {
 		if ( isset( $attr_spec_rule[ AMP_Rule_Spec::VALUE_URL ] ) ) {
 			if ( $node->hasAttribute( $attr_name ) ) {
-				$urls_to_test = preg_split( '/\s*,\s*/', $node->getAttribute( $attr_name ) );
-				foreach ( $urls_to_test as $url ) {
+				foreach ( $this->extract_attribute_urls( $node->getAttributeNode( $attr_name ) ) as $url ) {
 					$url = urldecode( $url );
-					// Check if the host contains invalid chars.
-					$url_host = wp_parse_url( $url, PHP_URL_HOST );
-					if ( $url_host && preg_match( '/[!"#$%&\'()*+,\/:;<=>?@[\]^`{|}~\s]/i', $url_host ) ) {
-						return AMP_Rule_Spec::FAIL;
+
+					// Check if the protocol contains invalid chars (protocolCharIsValid: https://github.com/ampproject/amphtml/blob/af1e3a550feeafd732226202b8d1f26dcefefa18/validator/engine/parse-url.js#L31-L39).
+					$protocol = $this->parse_protocol( $url );
+					if ( isset( $protocol ) ) {
+						if ( ! preg_match( '/^[a-zA-Z0-9\+-]+/i', $protocol ) ) {
+							return AMP_Rule_Spec::FAIL;
+						}
+						$url = substr( $url, strlen( $protocol ) + 1 );
 					}
 
-					// Check if the protocol contains invalid chars.
-					$dots_pos = strpos( $url, ':' );
-					if ( false !== $dots_pos && preg_match( '/[!"#$%&\'()*+,\/:;<=>?@[\]^`{|}~\s]/i', substr( $url, 0, $dots_pos ) ) ) {
+					// Check if the host contains invalid chars (hostCharIsValid: https://github.com/ampproject/amphtml/blob/af1e3a550feeafd732226202b8d1f26dcefefa18/validator/engine/parse-url.js#L62-L103).
+					$host = AMP_WP_Utils::parse_url( $url, PHP_URL_HOST );
+					if ( $host && preg_match( '/[!"#$%&\'()*+,\/:;<=>?@[\]^`{|}~\s]/i', $host ) ) {
 						return AMP_Rule_Spec::FAIL;
 					}
 				}
@@ -1201,7 +1228,21 @@ class AMP_Tag_And_Attribute_Sanitizer extends AMP_Base_Sanitizer {
 
 		return AMP_Rule_Spec::NOT_APPLICABLE;
 	}
-
+	/**
+	 * Parse protocol from URL.
+	 *
+	 * This may not be a valid protocol (scheme), but it will be where the protocol should be in the URL.
+	 *
+	 * @link https://github.com/ampproject/amphtml/blob/af1e3a550feeafd732226202b8d1f26dcefefa18/validator/engine/parse-url.js#L235-L282
+	 * @param string $url URL.
+	 * @return string|null Protocol without colon if matched. Otherwise null.
+	 */
+	private function parse_protocol( $url ) {
+		if ( preg_match( '#^[^/]+(?=:)#', $url, $matches ) ) {
+			return $matches[0];
+		}
+		return null;
+	}
 	/**
 	 * Check if attribute has a protocol value rule determine if it matches.
 	 *
@@ -1254,6 +1295,32 @@ class AMP_Tag_And_Attribute_Sanitizer extends AMP_Base_Sanitizer {
 			}
 		}
 		return AMP_Rule_Spec::NOT_APPLICABLE;
+	}
+	/**
+	 * Extract URLs from attribute.
+	 *
+	 * @param DOMAttr     $attribute_node Attribute node.
+	 * @param string|null $spec_attr_name Non-alternative attribute name for the spec.
+	 * @return string[] List of URLs.
+	 */
+	private function extract_attribute_urls( $attribute_node, $spec_attr_name = null ) {
+		/*
+		 * Handle the srcset special case where the attribute value can contain multiple parts, each in the format `URL [WIDTH] [PIXEL_DENSITY]`.
+		 * So we split the srcset attribute value by commas and then return the first token of each item, omitting width descriptor and pixel density descriptor.
+		 * This splitting cannot be done for other URLs because it a comma can appear in a URL itself generally, but the syntax can break in srcset,
+		 * unless the commas are URL-encoded.
+		 */
+		if ( 'srcset' === $attribute_node->nodeName || 'srcset' === $spec_attr_name ) {
+			return array_filter( array_map(
+				function ( $srcset_part ) {
+					// Remove descriptors for width and pixel density.
+					return preg_replace( '/\s.*$/', '', trim( $srcset_part ) );
+				},
+				preg_split( '/\s*,\s*/', $attribute_node->nodeValue )
+			) );
+		} else {
+			return array( $attribute_node->nodeValue );
+		}
 	}
 
 	/**
@@ -1504,7 +1571,7 @@ class AMP_Tag_And_Attribute_Sanitizer extends AMP_Base_Sanitizer {
 	 * @return bool Return true if the specified node's name is an AMP allowed tag, false otherwise.
 	 */
 	private function is_amp_allowed_tag( $node ) {
-		if ( ! $node instanceof DOMElement ) {
+		if ( ! $node instanceof \DOMElement ) {
 			return false;
 		}
 		/**

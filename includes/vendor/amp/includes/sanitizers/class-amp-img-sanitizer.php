@@ -1,7 +1,10 @@
 <?php
-
-require_once( AMP__DIR__ . '/includes/sanitizers/class-amp-base-sanitizer.php' );
-require_once( AMP__DIR__ . '/includes/utils/class-amp-image-dimension-extractor.php' );
+namespace AMPforWP\AMPVendor;
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+require_once( AMP__VENDOR__DIR__ . '/includes/sanitizers/class-amp-base-sanitizer.php' );
+require_once( AMP__VENDOR__DIR__ . '/includes/utils/class-amp-image-dimension-extractor.php' );
 
 /**
  * Converts <img> tags to <amp-img> or <amp-anim>
@@ -41,7 +44,7 @@ class AMP_Img_Sanitizer extends AMP_Base_Sanitizer {
 			// Add Foo Gallery Support
 			if ( $node->hasAttribute( 'data-src-fg' ) ) {
 				$image_scr_from_data_src   = $node->getAttribute( 'data-src-fg' ) ;
-				if ( ! $node->hasAttribute( 'src' ) || '' === $node->getAttribute( 'src' ) ) {
+				if ( ! $node->hasAttribute( 'src' ) || '' === $node->getAttribute( 'src' ) || strpos($node->getAttribute( 'src' ), 'data:image') !== false ) {
 					$node->setAttribute( 'src', $image_scr_from_data_src );
 				}
 			}
@@ -50,9 +53,35 @@ class AMP_Img_Sanitizer extends AMP_Base_Sanitizer {
 				$node->parentNode->removeChild( $node );
 				continue;
 			}
+			if ( ! is_numeric( $node->getAttribute( 'srcset' ) ) && true == ampforwp_get_setting('ampforwp-amp-img-lightbox')) {
+				if(!$node->getAttribute( 'srcset' )){
+					$image_src = $node->getAttribute( 'src' );
+					preg_match('/(.*-(\d{3}x\d{3}.))/', $image_src , $image_src_matches);
+					if($image_src_matches){
+					 	$img_name = explode('/',$image_src);
+					    $img_name = end($img_name);
+					    $img_croped = explode('-',$img_name);
+					    $img_croped = end($img_croped);
+					    $img_ext = wp_check_filetype($image_src);
+					    $img_ext = $img_ext['ext'];
+					    $new_img_url = str_replace("-$img_croped",".$img_ext",$image_src);
+					    if ( $new_img_url ) {
+					    	$node->setAttribute( 'srcset', esc_url($new_img_url) );
+					    }
+					}
+				}
+			}
 
+			if( $node->getAttribute( 'src' )){
+				if (strpos($node->getAttribute( 'src' ), '../wp-content') !== false) {
+				    $site_url = content_url();
+				    $image_complete_src = str_replace('../wp-content', $site_url, $node->getAttribute( 'src' ));
+				    $node->setAttribute('src',$image_complete_src);
+				}
+			}
+			
 			// Determine which images need their dimensions determined/extracted.
-			if ( '' === $node->getAttribute( 'width' ) || '' === $node->getAttribute( 'height' ) ) {
+			if ( ! is_numeric( $node->getAttribute( 'width' ) ) || ! is_numeric( $node->getAttribute( 'height' ) ) ) {
 				$need_dimensions[ $node->getAttribute( 'src' ) ][] = $node;
 			} else {
 				$this->adjust_and_replace_node( $node );
@@ -70,22 +99,63 @@ class AMP_Img_Sanitizer extends AMP_Base_Sanitizer {
 	 * @param array $need_dimensions List of Img src url to node mappings corresponding to images that need dimensions.
 	 */
 	private function determine_dimensions( $need_dimensions ) {
+
 		$dimensions_by_url = AMP_Image_Dimension_Extractor::extract( array_keys( $need_dimensions ) );
+		$class = "";
 
 		foreach ( $dimensions_by_url as $url => $dimensions ) {
 			foreach ( $need_dimensions[ $url ] as $node ) {
-				// Provide default dimensions for images whose dimensions we couldn't fetch.
-				if ( false === $dimensions ) {
-					$width = isset( $this->args['content_max_width'] ) ? $this->args['content_max_width'] : self::FALLBACK_WIDTH;
-					$height = self::FALLBACK_HEIGHT;
-					$node->setAttribute( 'width', $width );
-					$node->setAttribute( 'height', $height );
-					$class = $node->hasAttribute( 'class' ) ? $node->getAttribute( 'class' ) . ' amp-wp-unknown-size' : 'amp-wp-unknown-size';
-					$node->setAttribute( 'class', $class );
-				} else {
-					$node->setAttribute( 'width', $dimensions['width'] );
-					$node->setAttribute( 'height', $dimensions['height'] );
+				if ( ! $node instanceof \DOMElement ) {
+					continue;
 				}
+				$class = $node->getAttribute( 'class' );
+				if ( ! $class ) {
+					$class = '';
+				}
+				if ( ! $dimensions ) {
+					$class .= ' amp-wp-unknown-size';
+				}
+
+				$width  = isset( $this->args['content_max_width'] ) ? $this->args['content_max_width'] : self::FALLBACK_WIDTH;
+				$height = self::FALLBACK_HEIGHT;
+				if ( isset( $dimensions['width'] ) ) {
+					$dimensions['width']  = (int)$dimensions['width'];
+					$width = $dimensions['width'];
+				}
+				if ( isset( $dimensions['height'] ) ) {
+					$dimensions['height']  = (int)$dimensions['height'];
+					$height = $dimensions['height'];
+				}
+
+				if ( ! is_numeric( $node->getAttribute( 'width' ) ) ) {
+
+					// Let width have the right aspect ratio based on the height attribute.
+					if ( is_numeric( $node->getAttribute( 'height' ) ) && isset( $dimensions['height'] ) && 0 !== $dimensions['height'] && isset( $dimensions['width'] ) ) {
+						$width = round( ( floatval( $node->getAttribute( 'height' ) ) * $dimensions['width'] ) / $dimensions['height'] );
+					}
+					if($width==0){
+						$width = self::FALLBACK_WIDTH;
+					}
+					$node->setAttribute( 'width', $width );
+					if ( ! isset( $dimensions['width'] ) ) {
+						$class .= ' amp-wp-unknown-width';
+					}
+				}
+				if ( ! is_numeric( $node->getAttribute( 'height' ) ) ) {
+
+					// Let height have the right aspect ratio based on the width attribute.
+					if ( is_numeric( $node->getAttribute( 'width' ) ) && isset( $dimensions['width'] ) && 0 !== $dimensions['width'] && isset( $dimensions['height'] ) ) {
+						$height = round( ( floatval( $node->getAttribute( 'width' ) ) * $dimensions['height'] ) / $dimensions['width'] );
+					}
+					if($height==0){
+						$height = self::FALLBACK_HEIGHT;
+					}
+					$node->setAttribute( 'height', $height );
+					if ( ! isset( $dimensions['height'] ) ) {
+						$class .= ' amp-wp-unknown-height';
+					}
+				}
+				$node->setAttribute( 'class', trim( $class ) );
 			}
 		}
 	}
@@ -100,6 +170,14 @@ class AMP_Img_Sanitizer extends AMP_Base_Sanitizer {
 		$old_attributes = apply_filters('amp_img_attributes', $old_attributes);
 		$new_attributes = $this->filter_attributes( $old_attributes );
 		$new_attributes = $this->enforce_sizes_attribute( $new_attributes );
+		// Use responsive images when a theme supports wide and full-bleed images.
+		if ( ! empty( $this->args['align_wide_support'] ) && $node->parentNode && 'figure' === $node->parentNode->nodeName && preg_match( '/(^|\s)(alignwide|alignfull)(\s|$)/', $node->parentNode->getAttribute( 'class' ) ) ) {
+			$new_attributes['layout'] = 'responsive';
+		} else {
+			$new_attributes['layout'] = 'intrinsic';
+		}
+		// Remove sizes attribute since it causes headaches in AMP and because AMP will generate it for us. See <https://github.com/ampproject/amphtml/issues/21371>.
+		unset( $new_attributes['sizes'] );
 		if ( $this->is_gif_url( $new_attributes['src'] ) ) {
 			$this->did_convert_elements = true;
 			$new_tag = 'amp-anim';
@@ -108,6 +186,7 @@ class AMP_Img_Sanitizer extends AMP_Base_Sanitizer {
 		}
 		$new_node = AMP_DOM_Utils::create_node( $this->dom, $new_tag, $new_attributes );
 		$node->parentNode->replaceChild( $new_node, $node );
+		
 		if ( isset($new_attributes['on']) && '' != $new_attributes['on'] ) {
 			if(is_singular() || ampforwp_is_front_page()){
 				add_action('amp_post_template_footer', 'ampforwp_amp_img_lightbox');
@@ -130,9 +209,10 @@ class AMP_Img_Sanitizer extends AMP_Base_Sanitizer {
 	}
 
 	public function get_scripts() {
-		if ( $this->is_lightbox ) {
+		if ( $this->is_lightbox && (is_singular() || ampforwp_is_front_page())) {
 			$this->scripts[self::$script_slug_lightbox] = self::$script_src_lightbox;
 		}
+
 
 		if ( $this->did_convert_elements ) {
 			$this->scripts[self::$script_slug] = self::$script_src;
@@ -148,9 +228,11 @@ class AMP_Img_Sanitizer extends AMP_Base_Sanitizer {
 			switch ( $name ) {
 				case 'src':
 				case 'alt':
+				case 'id':
 				case 'class':
 				case 'srcset':
 				case 'sizes':
+				case 'itemprop':
 				case 'on':
 				case 'role':
 				case 'tabindex':

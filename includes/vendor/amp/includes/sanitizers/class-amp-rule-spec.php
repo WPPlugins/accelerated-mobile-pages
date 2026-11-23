@@ -1,4 +1,8 @@
 <?php
+namespace AMPforWP\AMPVendor;
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
 /**
  * Class AMP_Rule_Spec
  *

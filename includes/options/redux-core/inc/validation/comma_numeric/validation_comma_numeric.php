@@ -1,5 +1,7 @@
 <?php
-
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
     if ( ! class_exists( 'Redux_Validation_comma_numeric' ) ) {
         class Redux_Validation_comma_numeric {
 
@@ -13,7 +15,7 @@
 
                 $this->parent       = $parent;
                 $this->field        = $field;
-                $this->field['msg'] = ( isset( $this->field['msg'] ) ) ? $this->field['msg'] : __( 'You must provide a comma separated list of numerical values for this option.', 'redux-framework' );
+                $this->field['msg'] = ( isset( $this->field['msg'] ) ) ? $this->field['msg'] : __( 'You must provide a comma separated list of numerical values for this option.', 'accelerated-mobile-pages' );
                 $this->value        = $value;
                 $this->current      = $current;
 

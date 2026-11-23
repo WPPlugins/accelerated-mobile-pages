@@ -1,14 +1,17 @@
 <?php
+// Exit if accessed directly
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
 // 46. search search search everywhere #615
-
 add_action('pre_amp_render_post','ampforwp_search_related_functions',12);
 function ampforwp_search_related_functions(){
 	global $redux_builder_amp;
-	if ( $redux_builder_amp['amp-design-selector'] == 1 ||
+	if ( isset($redux_builder_amp['amp-design-selector']) && ( $redux_builder_amp['amp-design-selector'] == 1 ||
 	     $redux_builder_amp['amp-design-selector'] == 2 ||
-	     $redux_builder_amp['amp-design-selector'] == 3 ) {
+	     $redux_builder_amp['amp-design-selector'] == 3 ) ) {
 
-				add_filter( 'amp_post_template_data', 'ampforwp_add_lightbox_and_form_scripts');
+				add_filter( 'ampforwp_post_template_data', 'ampforwp_add_lightbox_and_form_scripts');
 				add_action('ampforwp_search_form','ampforwp_the_search_form');
 	}
 }
@@ -38,7 +41,7 @@ function ampforwp_search_button_html_output(){
 	     $redux_builder_amp['amp-design-2-search-feature'] ||
 			 $redux_builder_amp['amp-design-3-search-feature'] ) { ?>
         <div class="searchmenu">
-					<button on="tap:search-icon">
+					<button on="tap:search-icon" aria-label="Search">
 						<i class="icono-search"></i>
 					</button>
 				</div>
@@ -65,6 +68,7 @@ function ampforwp_add_lightbox_and_form_scripts( $data ) {
 }
 
 function ampforwp_the_search_form() {
+	/* phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped */
     echo ampforwp_get_search_form();
 }
 function ampforwp_get_search_form() {
@@ -73,38 +77,36 @@ function ampforwp_get_search_form() {
 		$action_url = '';
 		$amp_query_variable = '';
 		$amp_query_variable_val = '';
-		$label = ampforwp_translation(isset($redux_builder_amp['ampforwp-search-label']) && $redux_builder_amp['ampforwp-search-label'], 'Type your search query and hit enter');
+		$label = esc_html(ampforwp_translation(ampforwp_get_setting('ampforwp-search-label'), 'Type your search query and hit enter'));
 		$action_url = esc_url( get_bloginfo('url') );
 		$action_url = preg_replace('#^http?:#', '', $action_url);
 		$placeholder = ampforwp_translation($redux_builder_amp['ampforwp-search-placeholder'], 'Type Here' );
-		if ( isset($redux_builder_amp['ampforwp-amp-takeover']) && !$redux_builder_amp['ampforwp-amp-takeover'] ) {
+		$value = get_search_query();
+		$name = 's';
+		$mob_pres_link = false;
+		if(function_exists('ampforwp_mobile_redirect_preseve_link')){
+		   $mob_pres_link = ampforwp_mobile_redirect_preseve_link();
+		}
+		if ( ampforwp_get_setting('ampforwp-amp-takeover') == false && $mob_pres_link == false) {
 			$amp_query_variable = 'amp';
 			$amp_query_variable_val = '1';
 		}
-	  $form = '<form role="search" method="get" id="searchform" class="searchform" target="_top" action="' . $action_url  .'">
+		if (ampforwp_get_setting('ampforwp-search-google')) {
+			$action_url = 'https://www.google.com/search';
+			$amp_query_variable = '';
+			$value = 'site:'.get_bloginfo('url').$value;
+			$name = 'q';
+		}
+	  $form = '<form role="search" method="get" id="searchform" class="searchform" target="_top" action="' . esc_url($action_url)  .'">
 <div>
-<label aria-label="Type your query" class="screen-reader-text" for="s">' . $label . '</label>
-<input type="text" placeholder="AMP" value="'.$amp_query_variable_val.'" name="'.$amp_query_variable.'" class="hide" id="ampforwp_search_query_item" />
-<input type="text" placeholder="'.$placeholder.'" value="' . get_search_query() . '" name="s" id="s" />
+<label aria-label="Type your query" class="screen-reader-text" for="s">' . esc_html($label) . '</label>
+<input type="text" placeholder="AMP" value="'.esc_attr($amp_query_variable_val).'" name="'.esc_attr($amp_query_variable).'" class="hide" id="ampforwp_search_query_item" />
+<input type="text" placeholder="'.esc_attr($placeholder).'" value="' . esc_attr($value).'" name="'.esc_attr($name).'" id="s" />
 <label aria-label="Submit amp search" for="amp-search-submit" >
-<input type="submit" id="searchsubmit" value="'. esc_attr_x( 'Search', 'submit button' ) .'" />
+<input type="submit" id="searchsubmit" value="'. esc_attr_x( 'Search', 'submit button', 'accelerated-mobile-pages' ) .'" />
 </label>
 </div>
 </form>';
 	    return $form;
 		}
 }
-
-if( !function_exists( 'is_search_enabled_in_ampforwp' ) ) {
-	function is_search_enabled_in_ampforwp() {
-		global $redux_builder_amp;
-		if( ( $redux_builder_amp['amp-design-selector']==1 && $redux_builder_amp['amp-design-1-search-feature'] ) ||
-	 			(	$redux_builder_amp['amp-design-selector']==2 && $redux_builder_amp['amp-design-2-search-feature'] ) ||
-				(	$redux_builder_amp['amp-design-selector']==3 && $redux_builder_amp['amp-design-3-search-feature'] ) ) {
-					return true;
-				}
-			return false;
-	}
-}
-
-

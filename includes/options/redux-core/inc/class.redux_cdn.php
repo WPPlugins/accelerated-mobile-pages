@@ -1,5 +1,5 @@
 <?php
-
+    namespace ReduxCore\ReduxFramework;
     /**
      * Redux Framework CDN Container Class
      *
@@ -13,12 +13,12 @@
         exit;
     }
 
-    if ( ! class_exists( 'Redux_CDN' ) ) {
+    if ( ! class_exists( 'ReduxCore\\ReduxFramework\\Redux_CDN' ) ) {
         class Redux_CDN {
             static public $_parent;
             static private $_set;
 
-            private static function is_enqueued( $handle, $list = 'enqueued', $is_script ) {
+            private static function is_enqueued( $handle, $list = 'enqueued', $is_script = true ) {
                 if ( $is_script ) {
                     wp_script_is( $handle, $list );
                 } else {
@@ -42,13 +42,14 @@
                 }
             }
 
-            private static function _cdn( $register = true, $handle, $src_cdn, $deps, $ver, $footer_or_media, $is_script = true ) {
+            private static function _cdn( $register = true, $handle = '', $src_cdn = '', $deps = '', $ver = '', $footer_or_media = '', $is_script = true ) {
                 $tran_key = '_style_cdn_is_up';
                 if ( $is_script ) {
                     $tran_key = '_script_cdn_is_up';
                 }
-
-                $cdn_is_up = get_transient( $handle . $tran_key );
+                if (!empty($handle)) {
+                    $cdn_is_up = get_transient( $handle . $tran_key );
+                }
                 if ( $cdn_is_up ) {
                     if ( $register ) {
                         self::_register( $handle, $src_cdn, $deps, $ver, $footer_or_media, $is_script );
@@ -61,7 +62,7 @@
                     $cdn_response = @wp_remote_get( $prefix . $src_cdn );
 
                     if ( is_wp_error( $cdn_response ) || wp_remote_retrieve_response_code( $cdn_response ) != '200' ) {
-                        if ( class_exists( 'Redux_VendorURL' ) ) {
+                        if ( class_exists( 'ReduxCore\\ReduxFramework\\Redux_VendorURL' ) ) {
                             $src = Redux_VendorURL::get_url( $handle );
 
                             if ( $register ) {
@@ -71,14 +72,15 @@
                             }
                         } else {
                             if ( ! self::is_enqueued( $handle, 'enqueued', $is_script ) ) {
-                                $msg = __( 'Please wait a few minutes, then try refreshing the page. Unable to load some remotely hosted scripts.', 'redux-framework' );
+                                $msg = __( 'Please wait a few minutes, then try refreshing the page. Unable to load some remotely hosted scripts.', 'accelerated-mobile-pages' );
                                 if ( self::$_parent->args['dev_mode'] ) {
-                                    $msg = sprintf( __( 'If you are developing offline, please download and install the <a href="%s" target="_blank">Redux Vendor Support</a> plugin/extension to bypass the our CDN and avoid this warning', 'redux-framework' ), 'https://github.com/reduxframework/redux-vendor-support' );
+                                    /* translators: %s: href */
+                                    $msg = sprintf( __( 'If you are developing offline, please download and install the <a href="%s" target="_blank">Redux Vendor Support</a> plugin/extension to bypass the our CDN and avoid this warning', 'accelerated-mobile-pages' ), 'https://github.com/reduxframework/redux-vendor-support' );
                                 }
 
                                 self::$_parent->admin_notices[] = array(
                                     'type'    => 'error',
-                                    'msg'     => '<strong>' . __( 'Redux Framework Warning', 'redux-framework' ) . '</strong><br/>' . sprintf( __( '%s CDN unavailable.  Some controls may not render properly.', 'redux-framework' ), $handle ) . '  ' . $msg,
+                                    'msg'     => '<strong>' . esc_html__( 'Redux Framework Warning', 'accelerated-mobile-pages' ) . '</strong><br/>' . $handle. '  ' . esc_html__( 'CDN unavailable.  Some controls may not render properly.', 'accelerated-mobile-pages' ) . '  ' . $msg,
                                     'id'      => $handle . $tran_key,
                                     'dismiss' => false,
                                 );
@@ -97,10 +99,11 @@
                 }
             }
 
-            private static function _vendor_plugin( $register = true, $handle, $src_cdn, $deps, $ver, $footer_or_media, $is_script = true ) {
-                if ( class_exists( 'Redux_VendorURL' ) ) {
-                    $src = Redux_VendorURL::get_url( $handle );
-
+            private static function _vendor_plugin( $register = true, $handle = '', $src_cdn = '', $deps = '', $ver = '', $footer_or_media = '', $is_script = true ) {
+                if ( class_exists( 'ReduxCore\\ReduxFramework\\Redux_VendorURL' ) ) {
+                    if (!empty($handle)) {
+                        $src = Redux_VendorURL::get_url( $handle );
+                    }
                     if ( $register ) {
                         self::_register( $handle, $src, $deps, $ver, $footer_or_media, $is_script );
                     } else {
@@ -110,7 +113,8 @@
                     if ( ! self::$_set ) {
                         self::$_parent->admin_notices[] = array(
                             'type'    => 'error',
-                            'msg'     => sprintf( __( 'The <a href="%s">Vendor Support plugin</a> (or extension) is either not installed or not activated and thus, some controls may not render properly.  Please ensure that it is installed and <a href="%s">activated</a>', 'redux-framework' ), 'https://github.com/reduxframework/redux-vendor-support', admin_url( 'plugins.php' ) ),
+                            /* translators: %1$s %2$s: href */
+                            'msg'     => sprintf( __( 'The <a href="%1$s">Vendor Support plugin</a> (or extension) is either not installed or not activated and thus, some controls may not render properly.  Please ensure that it is installed and <a href="%2$s">activated</a>', 'accelerated-mobile-pages' ), 'https://github.com/reduxframework/redux-vendor-support', admin_url( 'plugins.php' ) ),
                             'id'      => $handle . '23',
                             'dismiss' => false,
                         );

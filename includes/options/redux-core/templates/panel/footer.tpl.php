@@ -1,4 +1,8 @@
 <?php
+namespace ReduxCore\ReduxFramework;
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
     /**
      * The template for the panel footer area.
      * Override this template by specifying the path where it is stored (templates_path) in your Redux config.
@@ -41,6 +45,7 @@
                                 echo esc_attr( $link['icon'] );
                             ?>"></i>
                         <?php else : ?>
+                            <?php /* phpcs:ignore PluginCheck.CodeAnalysis.ImageFunctions.NonEnqueuedImage */ ?>
                             <img src="<?php echo esc_url( $link['img'] ); ?>"/>
                         <?php endif; ?>
 
@@ -48,23 +53,24 @@
                 <?php } ?>
 
             </div>
-        <?php } ?>
+         <?php } $url = 'https://microwork.dev/';?>
+         <div class='custom_url'><a href="<?php echo esc_url($url);?>" target="_blank"><?php echo "Introducing MicroWork.dev" ?></a></div>
 
         <div class="redux-action_bar">
             <span class="spinner"></span>
 <?php 
             if ( false === $this->parent->args['hide_save'] ) {
-                submit_button( __( 'Save Changes', 'redux-framework' ), 'primary', 'redux_save', false );
+                submit_button( __( 'Save Changes', 'accelerated-mobile-pages' ), 'primary', 'redux_save', false );
             }
 
             if ( false === $this->parent->args['hide_reset'] ) {
-                submit_button( __( 'Reset Section', 'redux-framework' ), 'secondary', $this->parent->args['opt_name'] . '[defaults-section]', false, array( 'id' => 'redux-defaults-section' ) );
-                submit_button( __( 'Reset All', 'redux-framework' ), 'secondary', $this->parent->args['opt_name'] . '[defaults]', false, array( 'id' => 'redux-defaults' ) );
+                submit_button( __( 'Reset Section', 'accelerated-mobile-pages' ), 'secondary', $this->parent->args['opt_name'] . '[defaults-section]', false, array( 'id' => 'redux-defaults-section' ) );
+                submit_button( __( 'Reset All', 'accelerated-mobile-pages' ), 'secondary', $this->parent->args['opt_name'] . '[defaults]', false, array( 'id' => 'redux-defaults' ) );
             } 
 ?>
         </div>
 
-        <div class="redux-ajax-loading" alt="<?php _e( 'Working...', 'redux-framework' ) ?>">&nbsp;</div>
+        <div class="redux-ajax-loading" alt="<?php esc_attr_e( 'Working...', 'accelerated-mobile-pages' ) ?>">&nbsp;</div>
         <div class="clear"></div>
 
     </div>

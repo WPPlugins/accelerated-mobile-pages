@@ -1,12 +1,12 @@
 <?php
 
-
+    namespace ReduxCore\ReduxFramework;
 
     if ( ! defined( 'ABSPATH' ) ) {
         exit;
     }
 
-    if ( ! class_exists( 'Redux_Filesystem' ) ) {
+    if ( ! class_exists( 'ReduxCore\\ReduxFramework\\Redux_Filesystem' ) ) {
         class Redux_Filesystem {
 
             /**
@@ -26,9 +26,11 @@
             public $parent = null;
 
             public function __construct() {
+                $this->parent = new \stdClass();
                 $this->parent->admin_notices[] = array(
                     'type'    => 'error',
-                    'msg'     => '<strong>' . __( 'File Permission Issues', 'redux-framework' ) . '</strong><br/>' . sprintf( __( 'We were unable to modify required files. Please check your permissions, or modify your wp-config.php file to contain your FTP login credentials as <a href="%s" target="_blank">outlined here</a>.', 'redux-framework' ), 'https://codex.wordpress.org/Editing_wp-config.php#WordPress_Upgrade_Constants' ),
+                    /* translators: %s: href */
+                    'msg'     => '<strong>' . ( did_action( 'init' ) ? __( 'File Permission Issues', 'accelerated-mobile-pages' ) : 'File Permission Issues' ) . '</strong><br/>' . sprintf( did_action( 'init' ) ? __( 'We were unable to modify required files. Please check your permissions, or modify your wp-config.php file to contain your FTP login credentials as <a href="%s" target="_blank">outlined here</a>.', 'accelerated-mobile-pages' ) : 'We were unable to modify required files. Please check your permissions, or modify your wp-config.php file to contain your FTP login credentials as <a href="%s" target="_blank">outlined here</a>.', 'https://codex.wordpress.org/Editing_wp-config.php#WordPress_Upgrade_Constants' ),
                     'id'      => 'redux-wp-login',
                     'dismiss' => false,
                 );
@@ -57,7 +59,10 @@
             public function ftp_form() {
                 if ( isset( $this->parent->ftp_form ) && ! empty( $this->parent->ftp_form ) ) {
                     echo '<div class="wrap"><div class="error"><p>';
-                    echo '<strong>' . __( 'File Permission Issues', 'redux-framework' ) . '</strong><br/>' . sprintf( __( 'We were unable to modify required files. Please ensure that <code>%1s</code> has the proper read-write permissions, or modify your wp-config.php file to contain your FTP login credentials as <a href="%2s" target="_blank">outlined here</a>.', 'redux-framework' ), Redux_Helpers::cleanFilePath( trailingslashit( WP_CONTENT_DIR ) ) . '/uploads/', 'https://codex.wordpress.org/Editing_wp-config.php#WordPress_Upgrade_Constants' );
+                    /* translators: %1$s: file path */
+                    /* translators: %2$s: href */
+                    /* phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped,WordPress.WP.I18n.MissingTranslatorsComment */
+                    echo '<strong>' . ( did_action( 'init' ) ? __( 'File Permission Issues', 'accelerated-mobile-pages' ) : 'File Permission Issues' ) . '</strong><br/>' . sprintf( did_action( 'init' ) ? __( 'We were unable to modify required files. Please ensure that <code>%1$s</code> has the proper read-write permissions, or modify your wp-config.php file to contain your FTP login credentials as <a href="%2$s" target="_blank">outlined here</a>.', 'accelerated-mobile-pages' ) : 'We were unable to modify required files. Please ensure that <code>%1$s</code> has the proper read-write permissions, or modify your wp-config.php file to contain your FTP login credentials as <a href="%2$s" target="_blank">outlined here</a>.', Redux_Helpers::cleanFilePath( trailingslashit( WP_CONTENT_DIR ) ) . '/uploads/', 'https://codex.wordpress.org/Editing_wp-config.php#WordPress_Upgrade_Constants' );
                     echo '</p></div><h2></h2>' . '</div>';
                 }
             }
@@ -105,7 +110,7 @@
                 if ( self::$direct === null ) {
                     require_once ABSPATH . '/wp-admin/includes/class-wp-filesystem-base.php';
                     require_once ABSPATH . '/wp-admin/includes/class-wp-filesystem-direct.php';
-                    self::$direct = new WP_Filesystem_Direct( array() );
+                    self::$direct = new \WP_Filesystem_Direct( array() );
                 }
             }
 
@@ -178,6 +183,7 @@
 
                         $res = file_exists( $file );
                         if ( ! $res ) {
+                            /* phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_mkdir */
                             mkdir( $file, $chmod, true );
                             $res = file_exists( $file );
                         }
@@ -188,6 +194,7 @@
                     if ( isset( $this->parent->ftp_form ) && ! empty( $this->parent->ftp_form ) ) {
                         $res = copy( $file, $destination );
                         if ( $res ) {
+                            /* phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_chmod */
                             chmod( $destination, $chmod );
                         }
                     } else {
@@ -268,7 +275,9 @@
                     $this->killswitch              = true;
                     $this->parent->admin_notices[] = array(
                         'type'    => 'error',
-                        'msg'     => '<strong>' . __( 'File Permission Issues', 'redux-framework' ) . '</strong><br/>' . sprintf( __( 'We were unable to modify required files. Please ensure that <code>%1s</code> has the proper read-write permissions, or modify your wp-config.php file to contain your FTP login credentials as <a href="%2s" target="_blank">outlined here</a>.', 'redux-framework' ), Redux_Helpers::cleanFilePath( trailingslashit( WP_CONTENT_DIR ) ) . '/uploads/', 'https://codex.wordpress.org/Editing_wp-config.php#WordPress_Upgrade_Constants' ),
+                         /* translators: %1$s: file path */
+                    /* translators: %2$s: href */
+                        'msg'     => '<strong>' . ( did_action( 'init' ) ? __( 'File Permission Issues', 'accelerated-mobile-pages' ) : 'File Permission Issues' ) . '</strong><br/>' . sprintf( did_action( 'init' ) ? __( 'We were unable to modify required files. Please ensure that <code>%1$s</code> has the proper read-write permissions, or modify your wp-config.php file to contain your FTP login credentials as <a href="%2$s" target="_blank">outlined here</a>.', 'accelerated-mobile-pages' ) : 'We were unable to modify required files. Please ensure that <code>%1$s</code> has the proper read-write permissions, or modify your wp-config.php file to contain your FTP login credentials as <a href="%2$s" target="_blank">outlined here</a>.', Redux_Helpers::cleanFilePath( trailingslashit( WP_CONTENT_DIR ) ) . '/uploads/', 'https://codex.wordpress.org/Editing_wp-config.php#WordPress_Upgrade_Constants' ),
                         'id'      => 'redux-wp-login',
                         'dismiss' => false,
                     );

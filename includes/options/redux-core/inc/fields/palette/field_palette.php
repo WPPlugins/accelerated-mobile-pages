@@ -1,5 +1,5 @@
 <?php
-
+namespace ReduxCore\ReduxFramework;
 /**
  * Redux Framework is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,6 +25,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 if ( ! class_exists( 'ReduxFramework_palette' ) ) {
     class ReduxFramework_palette {
+        
+        private $parent;
+        private $value;
+        private $field;
 
         /**
          * Field Constructor.
@@ -34,7 +38,7 @@ if ( ! class_exists( 'ReduxFramework_palette' ) ) {
          * @access      public
          * @return      void
          */
-        function __construct( $field = array(), $value = '', $parent ) {
+        function __construct( $field = array(), $value = '', $parent = ' ' ) {
             $this->parent = $parent;
             $this->field  = $field;
             $this->value  = $value;
@@ -53,15 +57,18 @@ if ( ! class_exists( 'ReduxFramework_palette' ) ) {
                 echo 'No palettes have been set.';
                 return;
             }
-            
+            /* phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped */
             echo '<div id="' . $this->field['id'] . '" class="buttonset">';
 
             foreach ( $this->field['palettes'] as $value => $colorSet ) {
                 $checked = checked( $this->value , $value, false );
+                /* phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped,WordPress.Security.EscapeOutput.OutputNotEscaped,WordPress.Security.EscapeOutput.OutputNotEscaped,WordPress.Security.EscapeOutput.OutputNotEscaped,WordPress.Security.EscapeOutput.OutputNotEscaped,WordPress.Security.EscapeOutput.OutputNotEscaped,WordPress.Security.EscapeOutput.OutputNotEscaped */
                 echo '<input type="radio" value="' . $value . '" name="' . $this->field['name'] . $this->field['name_suffix'] . '" class="redux-palette-set ' . $this->field['class'] . '" id="' . $this->field['id'] . '-' . $value . '"' . $checked . '>';
+                /* phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped,WordPress.Security.EscapeOutput.OutputNotEscaped */
                 echo '<label for="' . $this->field['id'] . '-' . $value . '">';
                 
                 foreach ( $colorSet as $color ) {
+                    /* phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped */
                     printf( "<span style='background: {$color}'>{$color}</span>" );
                 }                
                 

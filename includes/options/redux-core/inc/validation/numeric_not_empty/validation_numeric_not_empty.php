@@ -1,5 +1,7 @@
 <?php
-
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
 if ( ! class_exists( 'Redux_Validation_numeric_not_empty' ) ) {
     class Redux_Validation_numeric_not_empty {
 
@@ -13,7 +15,7 @@ if ( ! class_exists( 'Redux_Validation_numeric_not_empty' ) ) {
 
             $this->parent       = $parent;
             $this->field        = $field;
-            $this->field['msg'] = ( isset( $this->field['msg'] ) ) ? $this->field['msg'] : __( 'You must provide a numerical value for this option.', 'redux-framework' );
+            $this->field['msg'] = ( isset( $this->field['msg'] ) ) ? $this->field['msg'] : __( 'You must provide a numerical value for this option.', 'accelerated-mobile-pages' );
             $this->value        = $value;
             $this->current      = $current;
 

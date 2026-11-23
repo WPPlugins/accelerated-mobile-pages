@@ -1,5 +1,5 @@
 <?php
-
+namespace ReduxCore\ReduxFramework;
 // Exit if accessed directly
     if ( ! defined( 'ABSPATH' ) ) {
         exit;
@@ -8,13 +8,16 @@
     if ( ! class_exists( 'ReduxFramework_raw' ) ) {
         class ReduxFramework_raw {
 
+            private $parent;
+            private $value;
+            private $field;            
             /**
              * Field Constructor.
              * Required - must call the parent constructor, then assign field and value to vars, and obviously call the render field function
              *
              * @since ReduxFramework 3.0.4
              */
-            function __construct( $field = array(), $value = '', $parent ) {
+            function __construct( $field = array(), $value = '', $parent = ' ' ) {
                 $this->parent = $parent;
                 $this->field  = $field;
                 $this->value  = $value;
@@ -40,8 +43,10 @@
                     if ( isset( $this->field['markdown'] ) && $this->field['markdown'] == true && ! empty( $this->field['content'] ) ) {
                         require_once dirname( __FILE__ ) . "/parsedown.php";
                         $Parsedown = new Parsedown();
-                        echo $Parsedown->text( $this->field['content'] );
-                    } else {
+                         /* phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped */
+                         echo $Parsedown->text( $this->field['content'] );
+                        } else {
+                        /* phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped */
                         echo $this->field['content'];
                     }
                 }

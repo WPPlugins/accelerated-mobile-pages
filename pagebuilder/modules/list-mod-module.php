@@ -1,12 +1,14 @@
 <?php 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) exit;
 $output = '
-	{{repeater}}
+	<div {{if_id}}id="{{id}}"{{ifend_id}} class="{{user_class}}">{{repeater}}</div>
 ';
 $css = '
-.list-mod{display: flex;flex-direction: column;flex: 1 0 25%;justify-content: space-between;margin:{{margin_css}};}
-.list-mod .li-mod .ico-pic{font-size:{{ico-size}};display:inline-block;color:{{ico_color_picker}};padding-right: 10px;position: relative;top: 2px;}
-.list-mod .li-txt{font-size:{{text-size}};line-height:1.5;color:{{text_color_picker}};}
-.li-mod{margin-bottom:15px;}
+{{module-class}}.list-mod{display: flex;flex-direction: column;flex: 1 0 25%;justify-content: space-between;margin:{{margin_css}};}
+{{module-class}}.list-mod .li-mod .ico-pic{font-size:{{ico-size}};display:inline-block;color:{{ico_color_picker}};padding-right: 10px;position: relative;top: 2px;}
+{{module-class}}.list-mod .li-txt{font-size:{{text-size}};line-height:1.5;color:{{text_color_picker}};}
+{{module-class}}.li-mod{margin-bottom:15px;}
 ';
 return array(
 		'label' =>'Lists',
@@ -57,6 +59,22 @@ return array(
 								'tab'		=>'design',
 								'default'	=>'#333',
 								'content_type'=>'css'
+							),
+						array(
+								'type'		=>'text',
+								'name'		=>"id",
+								'label'		=>'ID',
+								'tab'		=>'advanced',
+								'default'	=>'',
+								'content_type'=>'html'
+							),
+						array(
+								'type'		=>'text',
+								'name'		=>"user_class",
+								'label'		=>'Class',
+								'tab'		=>'advanced',
+								'default'	=>'',
+								'content_type'=>'html'
 							),
 						array(
 								'type'		=>'spacing',

@@ -1,5 +1,5 @@
 <?php
-
+namespace ReduxCore\ReduxFramework;
 // Exit if accessed directly
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
@@ -7,6 +7,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 if ( ! class_exists( 'ReduxFramework_switch' ) ) {
     class ReduxFramework_switch {
+        public $parent;
+        public $field;
+        public $value;
+        public $timestamp;
 
         /**
          * Field Constructor.
@@ -14,7 +18,7 @@ if ( ! class_exists( 'ReduxFramework_switch' ) ) {
          *
          * @since ReduxFramework 0.0.4
          */
-        function __construct( $field = array(), $value = '', $parent ) {
+        function __construct( $field = array(), $value = '', $parent = ' ' ) {
             $this->parent = $parent;
             $this->field  = $field;
             $this->value  = $value;
@@ -52,16 +56,20 @@ if ( ! class_exists( 'ReduxFramework_switch' ) ) {
                 $switch_text = '<span class="'.$class_on.'">'.$this->field['on'].'</span><span class="'.$class_off.'">'.$this->field['off'].'</span>';
             }           
             
-            echo '<div class="switch-options">
+             echo '<div class="switch-options">
                         <label class="ios7-switch">
-                            <input class="switch-on-off" type="checkbox" '.($cb_enabled==' selected' ? 'checked' : '').' data-id="' . $this->field['id'] . '">
+                            <input class="switch-on-off" type="checkbox" '.($cb_enabled==' selected' ? 'checked' : '').' data-id="' . /* phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped */ $this->field['id'] . '">
                             <span></span>
                         </label>
                     ';
+                    /* phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped, WordPress.Security.EscapeOutput.OutputNotEscaped, WordPress.Security.EscapeOutput.OutputNotEscaped, WordPress.Security.EscapeOutput.OutputNotEscaped, WordPress.Security.EscapeOutput.OutputNotEscaped*/
             echo '<input type="hidden" class="checkbox checkbox-input ' . $this->field['class'] . '" id="' . $this->field['id'] . '" name="' . $this->field['name'] . $this->field['name_suffix'] . '" value="' . $this->value . '" />';
+            /* phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped */
             echo $switch_text;
             echo '</div>';
 
+            
+            
             /* echo '<div class="switch-options">';
             echo '<label class="cb-enable' . $cb_enabled . '" data-id="' . $this->field['id'] . '"><span>' . $this->field['on'] . '</span></label>';
             echo '<label class="cb-disable' . $cb_disabled . '" data-id="' . $this->field['id'] . '"><span>' . $this->field['off'] . '</span></label>';

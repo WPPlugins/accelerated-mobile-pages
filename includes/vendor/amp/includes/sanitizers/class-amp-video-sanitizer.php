@@ -1,6 +1,9 @@
 <?php
-
-require_once( AMP__DIR__ . '/includes/sanitizers/class-amp-base-sanitizer.php' );
+namespace AMPforWP\AMPVendor;
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+require_once( AMP__VENDOR__DIR__ . '/includes/sanitizers/class-amp-base-sanitizer.php' );
 
 /**
  * Converts <video> tags to <amp-video>
@@ -36,7 +39,11 @@ class AMP_Video_Sanitizer extends AMP_Base_Sanitizer {
 
 			$new_attributes = $this->enforce_fixed_height( $new_attributes );
 			$new_attributes = $this->enforce_sizes_attribute( $new_attributes );
-
+			if( ampforwp_get_setting('ampforwp-amp-video-docking') == true || ampforwp_get_setting('amp-theme-video-docking')==true ){
+				$new_attributes['dock'] = '#dock-slot';
+				$new_attributes['width'] = '500';
+				$new_attributes['layout'] = 'responsive';
+			}
 			$new_node = AMP_DOM_Utils::create_node( $this->dom, 'amp-video', $new_attributes );
 
 			// TODO: `source` does not have closing tag, and DOMDocument doesn't handle it well.
@@ -72,6 +79,7 @@ class AMP_Video_Sanitizer extends AMP_Base_Sanitizer {
 		foreach ( $attributes as $name => $value ) {
 			switch ( $name ) {
 				case 'src':
+					$value = str_replace('http://', '//', $value);
 					$out[ $name ] = $this->maybe_enforce_https_src( $value );
 					break;
 
@@ -83,6 +91,7 @@ class AMP_Video_Sanitizer extends AMP_Base_Sanitizer {
 				case 'poster':
 				case 'class':
 				case 'sizes':
+				case 'id':
 					$out[ $name ] = $value;
 					break;
 

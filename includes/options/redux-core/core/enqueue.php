@@ -1,10 +1,10 @@
 <?php
-
+namespace ReduxCore\ReduxFramework;
     if ( ! defined( 'ABSPATH' ) ) {
         exit;
     }
 
-    if ( ! class_exists( 'reduxCoreEnqueue' ) ) {
+    if ( ! class_exists( 'ReduxCore\\ReduxFramework\\reduxCoreEnqueue' ) ) {
         class reduxCoreEnqueue {
             public $parent = null;
 
@@ -35,7 +35,7 @@
 
                 $this->enqueue_fields();
 
-                add_filter("redux/{$this->parent->args['opt_name']}/localize", array('Redux_Helpers', 'localize'));
+                add_filter("redux/{$this->parent->args['opt_name']}/localize", array('ReduxCore\\ReduxFramework\\Redux_Helpers', 'localize'));
 
                 $this->set_localized_data();
                 
@@ -85,7 +85,7 @@
                 //*****************************************************************
                 Redux_CDN::register_style(
                     'select2-css',
-                    '//cdn.jsdelivr.net/select2/3.5.2/select2.css',
+                    ReduxFramework::$_url . 'assets/css/select2.css',
                     array(),
                     $this->timestamp, //'3.5.2'
                     'all'
@@ -223,7 +223,7 @@
                 
                 Redux_CDN::register_script(
                     'select2-js',
-                    '//cdn.jsdelivr.net/select2/3.5.2/select2' . $this->min . '.js',
+                    ReduxFramework::$_url . 'assets/js/select2.min.js',
                     array( 'jquery', 'redux-select2-sortable-js' ),
                     $this->timestamp, //'3.5.2',
                     true
@@ -288,14 +288,8 @@
                     $this->timestamp,
                     true
                 );
-
-                wp_enqueue_script(
-                    'webfontloader',
-                    'https://ajax.googleapis.com/ajax/libs/webfont/1.5.0/webfont.js',
-                    array( 'jquery' ),
-                    $this->timestamp, //'1.5.0',
-                    true
-                );
+                //phpcs:ignore PluginCheck.CodeAnalysis.EnqueuedResourceOffloading.OffloadedContent
+                wp_enqueue_script('webfontloader','https://ajax.googleapis.com/ajax/libs/webfont/1.5.0/webfont.js',array( 'jquery' ), $this->timestamp, true);
             }
 
             public function _enqueue_field($field) {
@@ -303,8 +297,8 @@
                 // if( isset( $field['type'] ) && $field['type'] != 'callback' ) {
                 if ( isset( $field['type'] ) && $field['type'] != 'callback' ) {
 
-                    $field_class = 'ReduxFramework_' . $field['type'];
-
+                    $field_class = 'ReduxCore\\ReduxFramework\\ReduxFramework_' . $field['type'];
+                    $field_class_old = 'ReduxFramework_' . $field['type'];
                     /**
                      * Field class file
                      * filter 'redux/{opt_name}/field/class/{field.type}
@@ -320,7 +314,10 @@
                             }
                         }
 
-                        if ( ( method_exists( $field_class, 'enqueue' ) ) || method_exists( $field_class, 'localize' ) ) {
+                    if ( class_exists($field_class_old) ) {
+                        $field_class = $field_class_old;
+                    }
+                        if ( ( method_exists( $field_class, 'enqueue' ) ) || method_exists( $field_class, 'localize' )) {
 
                             if ( ! isset( $this->parent->options[ $field['id'] ] ) ) {
                                 $this->parent->options[ $field['id'] ] = "";
@@ -452,7 +449,7 @@
                  *
                  * @param       string        save_pending string
                  */
-                $save_pending = apply_filters( "redux/{$this->parent->args['opt_name']}/localize/save_pending", __( 'You have changes that are not saved. Would you like to save them now?', 'redux-framework' ) );
+                $save_pending = apply_filters( "redux/{$this->parent->args['opt_name']}/localize/save_pending", __( 'You have changes that are not saved. Would you like to save them now?', 'accelerated-mobile-pages' ) );
 
                 /**
                  * Reset all string
@@ -460,7 +457,7 @@
                  *
                  * @param       string        reset all string
                  */
-                $reset_all = apply_filters( "redux/{$this->parent->args['opt_name']}/localize/reset", __( 'Are you sure? Resetting will lose all custom values.', 'redux-framework' ) );
+                $reset_all = apply_filters( "redux/{$this->parent->args['opt_name']}/localize/reset", __( 'Are you sure? Resetting will lose all custom values.', 'accelerated-mobile-pages' ) );
 
                 /**
                  * Reset section string
@@ -468,7 +465,7 @@
                  *
                  * @param       string        reset section string
                  */
-                $reset_section = apply_filters( "redux/{$this->parent->args['opt_name']}/localize/reset_section", __( 'Are you sure? Resetting will lose all custom values in this section.', 'redux-framework' ) );
+                $reset_section = apply_filters( "redux/{$this->parent->args['opt_name']}/localize/reset_section", __( 'Are you sure? Resetting will lose all custom values in this section.', 'accelerated-mobile-pages' ) );
 
                 /**
                  * Preset confirm string
@@ -476,14 +473,14 @@
                  *
                  * @param       string        preset confirm string
                  */
-                $preset_confirm = apply_filters( "redux/{$this->parent->args['opt_name']}/localize/preset", __( 'Your current options will be replaced with the values of this preset. Would you like to proceed?', 'redux-framework' ) );
+                $preset_confirm = apply_filters( "redux/{$this->parent->args['opt_name']}/localize/preset", __( 'Your current options will be replaced with the values of this preset. Would you like to proceed?', 'accelerated-mobile-pages' ) );
                 global $pagenow;
                 $this->parent->localize_data['args'] = array(
                     'save_pending'          => $save_pending,
                     'reset_confirm'         => $reset_all,
                     'reset_section_confirm' => $reset_section,
                     'preset_confirm'        => $preset_confirm,
-                    'please_wait'           => __( 'Please Wait', 'redux-framework' ),
+                    'please_wait'           => __( 'Please Wait', 'accelerated-mobile-pages' ),
                     'opt_name'              => $this->parent->args['opt_name'],
                     'slug'                  => $this->parent->args['page_slug'],
                     'hints'                 => $this->parent->args['hints'],
@@ -494,8 +491,8 @@
                 );
 
                 $this->parent->localize_data['ajax'] = array(
-                    'console' => __( 'There was an error saving. Here is the result of your action:', 'redux-framework' ),
-                    'alert'   => __( 'There was a problem with your action. Please try again or reload the page.', 'redux-framework' ),
+                    'console' => __( 'There was an error saving. Here is the result of your action:', 'accelerated-mobile-pages' ),
+                    'alert'   => __( 'There was a problem with your action. Please try again or reload the page.', 'accelerated-mobile-pages' ),
                 );
 
                 $this->parent->localize_data = apply_filters( "redux/{$this->parent->args['opt_name']}/localize", $this->parent->localize_data );

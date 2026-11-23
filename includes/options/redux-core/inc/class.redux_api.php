@@ -1,5 +1,5 @@
 <?php
-
+    namespace ReduxCore\ReduxFramework;
     /**
      * Redux Framework API Class
      * Makes instantiating a Redux object an absolute piece of cake.
@@ -15,7 +15,7 @@
     }
 
     // Don't duplicate me!
-    if ( ! class_exists( 'Redux' ) ) {
+    if ( ! class_exists( 'ReduxCore\\ReduxFramework\\Redux' ) ) {
 
         /**
          * Redux API Class
@@ -34,6 +34,7 @@
             public static $init = array();
             public static $extensions = array();
             public static $uses_extensions = array();
+            public static $apiHasRun;
 
             public function __call( $closure, $args ) {
                 return call_user_func_array( $this->{$closure}->bindTo( $this ), $args );
@@ -44,15 +45,15 @@
             }
 
             public static function load() {
-                add_action( 'after_setup_theme', array( 'Redux', 'createRedux' ) );
-                add_action( 'init', array( 'Redux', 'createRedux' ) );
-                add_action( 'switch_theme', array( 'Redux', 'createRedux' ) );
+                add_action( 'after_setup_theme', array( 'ReduxCore\\ReduxFramework\\Redux', 'createRedux' ) );
+                add_action( 'init', array( 'ReduxCore\\ReduxFramework\\Redux', 'createRedux' ) );
+                add_action( 'switch_theme', array( 'ReduxCore\\ReduxFramework\\Redux', 'createRedux' ) );
             }
 
             public static function init( $opt_name = "" ) {
                 if ( ! empty( $opt_name ) ) {
                     self::loadRedux( $opt_name );
-                    remove_action( 'setup_theme', array( 'Redux', 'createRedux' ) );
+                    remove_action( 'setup_theme', array( 'ReduxCore\\ReduxFramework\\Redux', 'createRedux' ) );
                 }
             }
 
@@ -67,9 +68,11 @@
                             }
                         }
                         if ( ! isset( $ReduxFramework->extensions[ $name ] ) ) {
+                            $extension['class'] = 'ReduxCore\\ReduxFramework\\'.$extension['class'];
                             if ( class_exists( $extension['class'] ) ) {
                                 $ReduxFramework->extensions[ $name ] = new $extension['class']( $ReduxFramework );
                             } else {
+                                /* phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped */
                                 echo '<div id="message" class="error"><p>No class named <strong>' . $extension['class'] . '</strong> exists. Please verify your extension path.</p></div>';
                             }
 
@@ -104,13 +107,13 @@
 
                 $args     = self::constructArgs( $opt_name );
                 $sections = self::constructSections( $opt_name );
-                if ( ! class_exists( 'ReduxFramework' ) ) {
+                if ( ! class_exists( 'ReduxCore\ReduxFramework\ReduxFramework' ) ) {
                     echo '<div id="message" class="error"><p>Redux Framework is <strong>not installed</strong>. Please install it.</p></div>';
 
                     return;
                 }
                 if ( isset( self::$uses_extensions[ $opt_name ] ) && ! empty( self::$uses_extensions[ $opt_name ] ) ) {
-                    add_action( "redux/extensions/{$opt_name}/before", array( 'Redux', 'loadExtensions' ), 0 );
+                    add_action( "redux/extensions/{$opt_name}/before", array( 'ReduxCore\\ReduxFramework\\Redux', 'loadExtensions' ), 0 );
                 }
 
                 $redux                   = new ReduxFramework( $sections, $args );
@@ -173,6 +176,7 @@
                         if ( $field['section_id'] == $section_id ) {
                             $p = $field['priority'];
                             while ( isset( $fields[ $p ] ) ) {
+                                /* phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped */
                                 echo $p ++;
                             }
                             $fields[ $p ] = $field;
@@ -262,7 +266,7 @@
                         }
                     }
                     if ( ! isset( $section['id'] ) ) {
-                        print_r( $section );
+                        print_r( $section ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_print_r	
                         echo "DOVY";
                     }
 

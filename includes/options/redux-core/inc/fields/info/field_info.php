@@ -1,5 +1,5 @@
 <?php
-
+namespace ReduxCore\ReduxFramework;
     /**
      * Redux Framework is free software: you can redistribute it and/or modify
      * it under the terms of the GNU General Public License as published by
@@ -33,6 +33,10 @@
          * @since       1.0.0
          */
         class ReduxFramework_info {
+            
+            public $parent;
+            public $field;
+            public $value;
 
             /**
              * Field Constructor.
@@ -42,7 +46,7 @@
              * @access      public
              * @return      void
              */
-            function __construct( $field = array(), $value = '', $parent ) {
+            function __construct( $field = array(), $value = '', $parent = ' ' ) {
                 $this->parent = $parent;
                 $this->field  = $field;
                 $this->value  = $value;

@@ -1,16 +1,29 @@
+<?php use AMPforWP\AMPVendor\AMP_HTML_Utils;
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+?>
 <?php global $redux_builder_amp;?>
 <!doctype html>
-<html amp <?php echo AMP_HTML_Utils::build_attributes_string( $this->get( 'html_tag_attributes' ) ); ?>>
+<html amp <?php 
+//phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+echo AMP_HTML_Utils::build_attributes_string( $this->get( 'html_tag_attributes' ) ); ?>>
 <head>
 	<meta charset="utf-8">
-    <link rel="dns-prefetch" href="https://cdn.ampproject.org">
+	<?php do_action('amp_experiment_meta', $this); ?>
+    <link rel="preconnect" href="//cdn.ampproject.org">
 	<?php do_action( 'amp_post_template_head', $this ); ?>
 	<style amp-custom>
 		<?php $this->load_parts( array( 'style' ) ); ?>
 		<?php do_action( 'amp_post_template_css', $this ); ?>
 	</style>
 </head>
-<body <?php ampforwp_body_class('single-post design_2_wrapper');?> >
+<?php
+	$lightbox = '';
+    if( false == ampforwp_get_setting('ampforwp-amp-img-lightbox') ){
+    	$lightbox = 'data-amp-auto-lightbox-disable ';
+	}?>
+<body <?php echo esc_attr($lightbox); ?><?php ampforwp_body_class('single-post design_2_wrapper');?> >
 <?php do_action('ampforwp_body_beginning', $this); ?>
 <?php $this->load_parts( array( 'header-bar' ) ); ?>
 

@@ -52,3 +52,50 @@ Reason: To extend the functionality of sidebars and Pagebuilder
 25. check added in class-amp-content.php on line no.107 #2173
 26. added htmlspecialchars($element->textContent); in includes/vendor/amp/includes/sanitizers/class-amp-blacklist-sanitizer.php line no 95 check #2346
 27. Class AMP_DOM_Utils updated #2445
+28. Class AMP_Gallery_Embed_Handler updated #1968
+29. Converted the space into %20 on anchor links which have spaces on line number 166 and here is the github ticket #2465
+30. FTP protocol has been whitelisted in anchor tags #2477
+31. Class AMP_Img_Sanitizer Updated #2748
+32. Widgets folder added in Vendor amp/includes #1400 
+33. Class AMP_Blacklist_Sanitizer updated #2835
+34. class-amp-style-sanitizer.php updated #2745
+35. Class AMP_Blacklist_Sanitizer updated for inernal links #2391
+36. Mobile detect library added from https://github.com/serbanghita/Mobile-Detect
+37. Class AMP_Img_Sanitizer Updated #2893
+38. Updated check_attr_spec_rule_valid_url function and also added two more functions parse_protocol and extract_attribute_urls #2862
+39. AMP Image Sanitizer Updated #2925
+40. Added itemprop attribute in amp-img #2585
+41. Added $ampforwpTemplate in amp.php #2977
+42. AMP_Content_Sanitizer updated #2287
+43. CSS syntax error in tag 'style amp-custom' - bad url #2974
+44. Updated Schema for author image #2919
+45. class-amp-iframe-sanitizer.php updated #2836
+45. Class-amp-gallery-block-sanitizer file Updated for new Gallery Designs #2868
+45. Added class-amp-gallery-block-sanitizer.php, class-amp-block-sanitizer.php in Vendor AMP Sanitizers and class-amp-core-block-handler.php in Vendor AMP Embed Handlers #2427
+45. Added a filter called ampforwp_featured_image_size, so users can change the default size of featured image in single post. #2896
+46. Class-amp-gallery-block-sanitizer file updated for Gallery with GIF Image not working issue #3304
+47. class-amp-allowed-tag-generated.php added amp-recaptcha-input support #3315
+48. Image sanitizer updated #3112
+49. class-amp-blacklist-sanitizer.php updated #3276
+50. Added id atttribute allowed in amp-video sanitizer #3406
+51. amp_get_permalink() function updated for the post id zero #3381
+52. Added code for Image is not loading when source of it starting from ../wp-content issue in class-amp-wistia-embed.php #3403
+53. Updated class-amp-wistia-embed.php #3386
+54. Added class_exists('SQ_Classes_ObjController') condition to amp_post_template_add_schemaorg_metadata for Squirrly SEO Compatibility #3421
+55. class-amp-content.php updated #3422
+56. whitelisted skype in anchor tags #3475
+57. Telegram links has been whitelisted in anchor tags #3578
+58. Improvement in iframe #3563
+59. Condition added in Wistia sanitizer to disable scripts when AMP Page Builder is enabled. #3587
+60. Added the Filter to modify attributes in HTML Tag #3685
+61. Undefined variable amp_url issue fixed #3776
+62. Warnings fixed of util function to get array component #3778
+63. Need to remove width from inline style on amp images #3741
+64. Fixed Instagram video (tv) rendering issue #3812
+65. Needs to redirect to 301, not in 302 #3767
+66. Whitelisted label and input tags #4054
+67. Whitelisted Picture tag #4051
+68. Improvement in input type #4289
+69. Fixed $url to render function in class-amp-Dailymotion-embed.php line 72
+70. Checking for $post->ID and $post->post_type since dynamically generated pages does not have these value set (amp-helper-functions.php from line 27) #5323
+71. Added new file for tiktok embeds class-amp-tikok-embed.php and removed old code for tiktok bed #5325

@@ -1,5 +1,5 @@
 <?php
-
+namespace ReduxCore\ReduxFramework;
 /**
  * Redux Framework is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,7 +41,7 @@ if ( ! class_exists( 'ReduxFramework_gallery' ) ) {
          * @access      public
          * @return      void
          */
-        function __construct( $field = array(), $value = '', $parent ) {
+        function __construct( $field = array(), $value = '', $parent = ' ' ) {
             $this->parent = $parent;
             $this->field  = $field;
             $this->value  = $value;
@@ -63,15 +63,19 @@ if ( ! class_exists( 'ReduxFramework_gallery' ) ) {
 
                 foreach ( $ids as $attachment_id ) {
                     $img = wp_get_attachment_image_src( $attachment_id, 'thumbnail' );
+                    /* phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped */
                     echo '<a class="of-uploaded-image" href="' . $img[0] . '">';
-                    echo '<img class="redux-option-image" id="image_' . $this->field['id'] . '_' . $attachment_id . '" src="' . $img[0] . '" alt="" target="_blank" rel="external" />';
+                    echo '<img class="redux-option-image" id="image_' ./* phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped */ $this->field['id'] . '_' . /* phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped */ $attachment_id . '" src="' . /* phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped */ $img[0] . '" alt="" target="_blank" rel="external" />';
                     echo '</a>';
                 }
             }
 
             echo '</div>';
-            echo '<a href="#" onclick="return false;" id="edit-gallery" class="gallery-attachments button button-primary">' . __( 'Add/Edit Gallery', 'redux-framework' ) . '</a> ';
-            echo '<a href="#" onclick="return false;" id="clear-gallery" class="gallery-attachments button">' . __( 'Clear Gallery', 'redux-framework' ) . '</a>';
+            /* phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped */
+            echo '<a href="#" onclick="return false;" id="edit-gallery" class="gallery-attachments button button-primary">' . __( 'Add/Edit Gallery', 'accelerated-mobile-pages' ) . '</a> ';
+            /* phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped */
+            echo '<a href="#" onclick="return false;" id="clear-gallery" class="gallery-attachments button">' . __( 'Clear Gallery', 'accelerated-mobile-pages' ) . '</a>';
+            /* phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped, WordPress.Security.EscapeOutput.OutputNotEscaped,WordPress.Security.EscapeOutput.OutputNotEscaped */
             echo '<input type="hidden" class="gallery_values ' . $this->field['class'] . '" value="' . esc_attr( $this->value ) . '" name="' . $this->field['name'] . $this->field['name_suffix'] . '" />';
         }
 

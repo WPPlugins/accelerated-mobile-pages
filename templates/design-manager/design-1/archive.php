@@ -1,9 +1,17 @@
-<?php global $redux_builder_amp; global $wp;  ?>
+<?php use AMPforWP\AMPVendor\AMP_HTML_Utils;
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+global $redux_builder_amp, $wp,$wp_query; ?>
 <!doctype html>
-<html amp <?php echo AMP_HTML_Utils::build_attributes_string( $this->get( 'html_tag_attributes' ) ); ?>>
+<html amp <?php 
+//phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+echo AMP_HTML_Utils::build_attributes_string( $this->get( 'html_tag_attributes' ) ); ?>
+>
 <head>
 	<meta charset="utf-8">
-    <link rel="dns-prefetch" href="https://cdn.ampproject.org">
+	<?php do_action('amp_experiment_meta', $this); ?>
+    <link rel="preconnect" href="//cdn.ampproject.org">
 	<?php
 	if ( is_archive() ) {
 		$description 	= get_the_archive_description();
@@ -25,7 +33,7 @@
 	$amp_component_scripts = $sanitizer->amp_scripts;
 	if ( $sanitizer && $amp_component_scripts) {	
 		foreach ($amp_component_scripts as $ampforwp_service => $ampforwp_js_file) { ?>
-			<script custom-element="<?php echo $ampforwp_service; ?>"  src="<?php echo $ampforwp_js_file; ?>" async></script> <?php
+			<script custom-element="<?php echo esc_attr($ampforwp_service); ?>"  src="<?php echo esc_url($ampforwp_js_file); ?>" async></script> <?php
 		}
 	}?>
 	<style amp-custom>
@@ -46,7 +54,9 @@
 
 	  <?php if ( is_archive() ) {
 	  	if( is_author() ){
-			$curauth = (get_query_var('author_name')) ? get_user_by('slug', get_query_var('author_name')) : get_userdata(get_query_var('author'));
+	  		$author_name = get_query_var('author_name');
+	  		$author = get_query_var('author');
+			$curauth = (get_query_var('author_name')) ? get_user_by('slug', esc_attr($author_name)) : get_userdata(esc_attr($author));
 				if( true == ampforwp_gravatar_checker($curauth->user_email) ){
 					$curauth_url = get_avatar_url( $curauth->user_email, array('size'=>180) );
 					if($curauth_url){ ?>
@@ -56,10 +66,16 @@
 					<?php }
 				}
 			}
-	    the_archive_title( '<h1 class="page-title">', '</h1>' );
-	    
+	    if(ampforwp_default_logo()){
+    		the_archive_title( '<h1 class="page-title">', '</h1>' );
+		}else{
+			the_archive_title( '<h2 class="page-title">', '</h2>' );
+		}
+	    	if(function_exists('ampforwp_category_image_compatibility')){
+	    		ampforwp_category_image_compatibility('echo','amp-wp-content taxonomy-image');
+	    	}
 			$arch_desc 		= $sanitizer->get_amp_content();
-			if( $arch_desc ) {  
+			if( $arch_desc || have_posts() ) {  
 				if ( get_query_var( 'paged' ) ) {
 		        $paged = get_query_var('paged');
 		    } elseif ( get_query_var( 'page' ) ) {
@@ -67,9 +83,9 @@
 		    } else {
 		        $paged = 1;
 		    }
-				if($paged <= '1') {?>
+				if($paged <= '1' && ampforwp_get_setting('ampforwp-cat-description')) {?>
 					<div class="amp-wp-content taxonomy-description">
-						<?php echo $arch_desc ; ?>
+						<?php ampforwp_print_archive_description( $arch_desc ); // amphtml content, no kses ?>
 				    </div> <?php
 				}
 			}
@@ -84,7 +100,7 @@
 	 			if(!empty($cat_childs)){
 	 				echo "<div class='amp-sub-archives'><ul>";
 	 				foreach ($cat_childs as $cat_child ) {
-	 					 echo '<li><a href="' . get_term_link( $cat_child ) . '">' . $cat_child->name . '</a></li>'; 
+	 					 echo '<li><a href="' . esc_url(get_term_link( $cat_child )) . '">' . esc_attr($cat_child->name) . '</a></li>'; 
 	 				}
 	 				echo "</ul></div>";
 	 			}
@@ -101,8 +117,23 @@
 		  		}
 				} ?>
 	        <div class="amp-wp-content amp-wp-article-header amp-loop-list">
-
-		        <h1 class="amp-wp-title"><a href="<?php echo esc_url( $ampforwp_amp_post_url ); ?>"><?php the_title() ?></a></h1>
+	        <?php 
+	        	$title_name = '<a href="'.esc_url( $ampforwp_amp_post_url ).'">'.get_the_title().'</a>';
+	        	if( ampforwp_default_logo() ){ ?>
+		        	<h2 class="amp-wp-title">
+						<?php 
+						//phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+						echo $title_name; //escaped above 
+						?>
+					</h2>
+				<?php }else{ ?>
+					<h3 class="amp-wp-title">
+						<?php 
+							//phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+							echo $title_name; //escaped above 
+						?>
+					</h3>
+				<?php } ?>
 
 				<div class="amp-wp-content-loop">
 
@@ -110,7 +141,7 @@
 							<time> <?php
 										$post_date =  human_time_diff( get_the_time('U', get_the_ID() ), current_time('timestamp') ) .' '. ampforwp_translation( $redux_builder_amp['amp-translator-ago-date-text'],'ago' );
                     					$post_date = apply_filters('ampforwp_modify_post_date',$post_date);
-                    					echo  $post_date ; ?>
+                    					echo  esc_attr($post_date) ; ?>
 							</time>
           </div>
 
@@ -123,39 +154,36 @@
 					}
 					$image_args = array("tag"=>'div',"tag_class"=>'home-post-image','image_size'=>'full','image_crop'=>'true','image_crop_width'=>$width,'image_crop_height'=>$height); ?>
 						<?php amp_loop_image($image_args); ?>
-					<?php }
-					
-						if( has_excerpt() ){
-							$content = get_the_excerpt();
-						}else{
-							$content = get_the_content();
-						} ?>
-					<p><?php global $redux_builder_amp;
-						if( ampforwp_check_excerpt() ) {
-							$excerpt_length = $redux_builder_amp['amp-design-1-excerpt'];
-							$final_content = "";					
-							$final_content  = apply_filters('ampforwp_modify_index_content', $content,  $excerpt_length );
-							if ( false === has_filter('ampforwp_modify_index_content' ) ) {
-								$final_content = wp_trim_words( strip_shortcodes( $content ) ,  $excerpt_length );
-							}
-							echo $final_content;
-
-						}?></p>
+					<?php } ?>
+					<?php if( ampforwp_check_excerpt() ) { amp_loop_excerpt( ampforwp_get_setting('amp-design-1-excerpt') ); } ?>
 				</div>
 	        </div>
 	    <?php 
 	     do_action('ampforwp_between_loop',$count,$this);
 		         $count++;
 	     endwhile;  ?>
+	     <?php do_action('ampforwp_loop_before_pagination') ?>
+		 <?php $infinite_scroll = ( int ) ampforwp_get_setting( 'ampforwp-infinite-scroll' );
+		$infinite_scroll_home = ( int ) ampforwp_get_setting( 'ampforwp-infinite-scroll-home' );
+		if ( $infinite_scroll === 0 || ( $infinite_scroll === 1 && $infinite_scroll_home === 0 ) ) {
+			?>
 		    <div class="amp-wp-content pagination-holder">
 
 		        <div id="pagination">
-		            <div class="next"><?php next_posts_link( ampforwp_translation($redux_builder_amp['amp-translator-next-text'] , 'Next') . ' &raquo;', 0 ) ?></div>
-		            <div class="prev"><?php previous_posts_link( '&laquo; '. ampforwp_translation($redux_builder_amp['amp-translator-previous-text'], 'Previous' ) ); ?></div>
+		        	<?php if ( get_next_posts_link('next', $wp_query->max_num_pages) ){ ?><div class="next">
+						<?php 
+							//phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+							echo apply_filters('ampforwp_next_posts_link', get_next_posts_link( ampforwp_translation($redux_builder_amp['amp-translator-next-text'], 'Next' ).'&raquo;', 0), $paged ) 
+						?></div><?php }?>
+		        	<?php if ( get_previous_posts_link() ){ ?><div class="prev">
+						<?php 
+							//phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+							echo apply_filters( 'ampforwp_previous_posts_link', get_previous_posts_link( '&laquo; '. ampforwp_translation($redux_builder_amp['amp-translator-previous-text'], 'Previous' )), $paged ); ?></div><?php }?>
 		            <div class="clearfix"></div>
 		        </div>
 
 		    </div>
+		<?php } ?>
 		<?php endif; ?>
 
 	<?php do_action('ampforwp_post_after_loop') ?>

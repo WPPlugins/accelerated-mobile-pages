@@ -1,5 +1,5 @@
 <?php
-
+namespace ReduxCore\ReduxFramework;
     /**
      * Redux Framework is free software: you can redistribute it and/or modify
      * it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@
     }
 
 // Don't duplicate me!
-    if ( ! class_exists( 'ReduxFramework_button_set' ) ) {
+    if ( ! class_exists( 'ReduxCore\\ReduxFramework\\ReduxFramework_button_set' ) ) {
 
         /**
          * Main ReduxFramework_button_set class
@@ -68,7 +68,7 @@
              * @access      public
              * @return      void
              */
-            function __construct( $field = array(), $value = '', $parent ) {
+            function __construct( $field = array(), $value = '', $parent = ' ' ) {
 
                 $this->parent = $parent;
                 $this->field  = $field;
@@ -122,8 +122,9 @@
                             $selected = checked( $this->value, $k, false );
                         }
                     }
-
+/* phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped */
                     echo '<input data-id="' . $this->field['id'] . '" type="' . $type . '" id="' . $this->field['id'] . '-buttonset' . $k . '" name="' . $this->field['name'] . $this->field['name_suffix'] . $multi_suffix . '" class="buttonset-item ' . $this->field['class'] . '" value="' . $k . '" ' . $selected . '/>';
+                    /* phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped */
                     echo '<label for="' . $this->field['id'] . '-buttonset' . $k . '">' . $v . '</label>';
                 }
 

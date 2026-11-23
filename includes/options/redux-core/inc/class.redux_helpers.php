@@ -1,12 +1,12 @@
 <?php
-
+namespace ReduxCore\ReduxFramework;
 // Exit if accessed directly
     if ( ! defined( 'ABSPATH' ) ) {
         exit;
     }
 
 // Don't duplicate me!
-    if ( ! class_exists( 'Redux_Helpers' ) ) {
+    if ( ! class_exists( 'ReduxCore\\ReduxFramework\\Redux_Helpers' ) ) {
 
         /**
          * Redux Helpers Class
@@ -41,6 +41,13 @@
                 return false;
             }
 
+            public static function get_auth_key_secret_key() {
+                $key = "";
+                $key .= defined( 'AUTH_KEY' ) ? AUTH_KEY : get_site_url();
+                $key .= defined( 'SECURE_AUTH_KEY' ) ? SECURE_AUTH_KEY : get_site_url();
+                return $key;
+            }
+
             public static function isFieldInUse( $parent, $field ) {
                 foreach ( $parent->sections as $k => $section ) {
                     if ( ! isset( $section['title'] ) ) {
@@ -66,6 +73,7 @@
             }
 
             public static function isLocalHost() {
+                /* phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotValidated,WordPress.Security.ValidatedSanitizedInput.InputNotValidated */
                 return ( $_SERVER['REMOTE_ADDR'] === '127.0.0.1' || $_SERVER['REMOTE_ADDR'] === 'localhost' ) ? 1 : 0;
             }
 
@@ -75,7 +83,7 @@
 
             public static function getTrackingObject() {
                 global $wpdb;
-
+/* phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotValidated,WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized */
                 $hash = md5( network_site_url() . '-' . $_SERVER['REMOTE_ADDR'] );
 
                 global $blog_id, $wpdb;
@@ -139,11 +147,12 @@
                     'release' => PHP_VERSION
                 );
 
-                $user_query     = new WP_User_Query( array( 'blog_id' => $blog_id, 'count_total' => true, ) );
-                $comments_query = new WP_Comment_Query();
+                $user_query     = new \WP_User_Query( array( 'blog_id' => $blog_id, 'count_total' => true, ) );
+                $comments_query = new \WP_Comment_Query();
 
                 $data = array(
                     '_id'       => $hash,
+                    /* phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotValidated */
                     'localhost' => ( $_SERVER['REMOTE_ADDR'] === '127.0.0.1' ) ? 1 : 0,
                     'php'       => $version,
                     'site'      => array(
@@ -172,7 +181,7 @@
                     'developer' => apply_filters( 'redux/tracking/developer', array() ),
                     'plugins'   => $plugins,
                 );
-
+ /* phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotValidated,WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized */
                 $parts    = explode( ' ', $_SERVER['SERVER_SOFTWARE'] );
                 $software = array();
                 foreach ( $parts as $part ) {
@@ -184,6 +193,7 @@
                         $software[ strtolower( $chunk[0] ) ] = $chunk[1];
                     }
                 }
+                 /* phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotValidated,WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized */
                 $software['full']             = $_SERVER['SERVER_SOFTWARE'];
                 $data['environment']          = $software;
                 $data['environment']['mysql'] = $wpdb->db_version();
@@ -209,6 +219,7 @@
                     'http://verify.redux.io',
                     array(
                         'body' => array(
+                            /* phpcs:ignore  WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.InputNotValidated, WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized */
                             'hash' => $_GET['action'],
                             'site' => esc_url( home_url( '/' ) ),
                         )
@@ -216,7 +227,7 @@
                 );
 
                 $data['body'] = urldecode( $data['body'] );
-
+                // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Reason: We are not processing form information.
                 if ( ! isset( $_GET['code'] ) || $data['body'] != $_GET['code'] ) {
                     die();
                 }
@@ -302,7 +313,7 @@
             public static function cleanFilePath( $path ) {
                 $path = str_replace( '', '', str_replace( array( "\\", "\\\\" ), '/', $path ) );
 
-                if ( $path[ strlen( $path ) - 1 ] === '/' ) {
+                if ( !empty($path) && $path[ strlen( $path ) - 1 ] === '/' ) {
                     $path = rtrim( $path, '/' );
                 }
 
@@ -324,11 +335,12 @@
                             if ( filetype( $dir . "/" . $object ) == "dir" ) {
                                 rrmdir( $dir . "/" . $object );
                             } else {
-                                unlink( $dir . "/" . $object );
+                                wp_delete_file( $dir . "/" . $object );
                             }
                         }
                     }
                     reset( $objects );
+                    /* phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_rmdir */
                     rmdir( $dir );
                 }
             }
@@ -340,15 +352,19 @@
              * @since ReduxFramework 3.0.4
              */
             public static function hex2rgba( $hex, $alpha = '' ) {
+                $r = $g = $b = '';
                 $hex = str_replace( "#", "", $hex );
                 if ( strlen( $hex ) == 3 ) {
                     $r = hexdec( substr( $hex, 0, 1 ) . substr( $hex, 0, 1 ) );
                     $g = hexdec( substr( $hex, 1, 1 ) . substr( $hex, 1, 1 ) );
                     $b = hexdec( substr( $hex, 2, 1 ) . substr( $hex, 2, 1 ) );
-                } else {
+                } else if (function_exists('ctype_xdigit') && ctype_xdigit($hex)) {
                     $r = hexdec( substr( $hex, 0, 2 ) );
                     $g = hexdec( substr( $hex, 2, 2 ) );
                     $b = hexdec( substr( $hex, 4, 2 ) );
+                    }
+                else{
+                    return false;
                 }
                 $rgb = $r . ',' . $g . ',' . $b;
 
@@ -428,7 +444,7 @@
                     'platform' => $browser->getPlatform(),
                     //'mobile'   => $browser->isMobile() ? 'true' : 'false',
                 );
-
+/* phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotValidated,WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized */
                 $sysinfo['server_info'] = esc_html( $_SERVER['SERVER_SOFTWARE'] );
                 $sysinfo['localhost']   = self::makeBoolStr( self::isLocalHost() );
                 $sysinfo['php_ver']     = function_exists( 'phpversion' ) ? esc_html( phpversion() ) : 'phpversion() function does not exist.';
@@ -472,7 +488,7 @@
                 //}
 
                 if ( $remote_checks == true ) {
-                    $response = wp_remote_post( 'https://www.paypal.com/cgi-bin/webscr', array(
+                   /* $response = wp_remote_post( 'https://www.paypal.com/cgi-bin/webscr', array(
                         'sslverify'  => false,
                         'timeout'    => 60,
                         'user-agent' => 'ReduxFramework/' . ReduxFramework::$_version,
@@ -497,7 +513,7 @@
                     } else {
                         $sysinfo['wp_remote_get']       = 'false';
                         $sysinfo['wp_remote_get_error'] = $response->get_error_message();
-                    }
+                    }*/
                 }
 
                 $active_plugins = (array) get_option( 'active_plugins', array() );
@@ -569,13 +585,6 @@
                     $sysinfo['theme']['parent_author_uri'] = $parent_theme->{'Author URI'};
                 }
 
-                //if ( $json_output ) {
-                //    $sysinfo = json_encode( $sysinfo );
-                //}
-
-                //print_r($sysinfo);
-                //exit();
-
                 return $sysinfo;
             }
 
@@ -606,8 +615,10 @@
                                 if ( ! $outdated_templates ) {
                                     $outdated_templates = true;
                                 }
-
-                                $found_files[ $plugin_name ][] = sprintf( __( '<code>%s</code> version <strong style="color:red">%s</strong> is out of date. The core version is %s', 'redux-framework' ), str_replace( WP_CONTENT_DIR . '/themes/', '', $theme_file ), $theme_version ? $theme_version : '-', $core_version );
+                                /* translators: %1$s: file path */
+                                /* translators: %2$s: theme version */
+                                /* translators: %3$s: core version */
+                                $found_files[ $plugin_name ][] = sprintf( __( '<code>%1$s</code> version <strong style="color:red">%2$s</strong> is out of date. The core version is %3$s', 'accelerated-mobile-pages' ), str_replace( WP_CONTENT_DIR . '/themes/', '', $theme_file ), $theme_version ? $theme_version : '-', $core_version );
                             } else {
                                 $found_files[ $plugin_name ][] = sprintf( '<code>%s</code>', str_replace( WP_CONTENT_DIR . '/themes/', '', $theme_file ) );
                             }
@@ -670,12 +681,16 @@
                     return $data[0];
                 } else {
                     $file_data = $filesystem->execute( 'get_contents', $file );
+                    if(!empty($file_data))
+                    {
+                        $file_data = str_replace( "\r", "\n", $file_data );
+                        $version   = '';
 
-                    $file_data = str_replace( "\r", "\n", $file_data );
-                    $version   = '';
-
-                    if ( preg_match( '/^[ \t\/*#@]*' . preg_quote( '@version', '/' ) . '(.*)$/mi', $file_data, $match ) && $match[1] ) {
-                        $version = _cleanup_header_comment( $match[1] );
+                        if ( preg_match( '/^[ \t\/*#@]*' . preg_quote( '@version', '/' ) . '(.*)$/mi', $file_data, $match ) && $match[1] ) {
+                            $version = trim( preg_replace( '/\s*(?:\*\/|\?>).*/', '', $match[1] ) );
+                        }
+                    }else{
+                        $version = '';
                     }
 
                     return $version;
